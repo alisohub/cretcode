@@ -2,13 +2,13 @@
    Базові налаштування та змінні
 ========================================= */
 :root {
-  --bg-color: #F9FAFB;          /* Дуже світлий сірий для фону */
-  --card-bg: #FFFFFF;           /* Чисто білий для карток */
-  --text-main: #1F2937;         /* Темно-сірий/вугільний для тексту */
-  --text-muted: #4B5563;        /* Світліший сірий для описів */
-  --accent-blue: #3B82F6;       /* Фірмовий синій */
-  --accent-blue-hover: #2563EB; /* Темніший синій для ховеру */
-  --border-color: #E5E7EB;      /* Легкі межі карток */
+  --bg-color: #F9FAFB;          
+  --card-bg: #FFFFFF;           
+  --text-main: #1F2937;         
+  --text-muted: #4B5563;        
+  --accent-blue: #3B82F6;       
+  --accent-blue-hover: #2563EB; 
+  --border-color: #E5E7EB;      
 }
 
 * {
@@ -75,12 +75,10 @@ header p {
   gap: 24px;
 }
 
-/* Дизайн самої картки */
 .card {
   background: var(--card-bg);
   border-radius: 16px;
   padding: 32px;
-  /* М'яка, розмита тінь для глибини */
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   border: 1px solid var(--border-color);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -115,7 +113,7 @@ header p {
 ========================================= */
 .features-list {
   list-style: none;
-  margin-bottom: auto; /* Виштовхує кнопку вниз */
+  margin-bottom: auto; 
   padding-bottom: 24px;
 }
 
@@ -136,10 +134,9 @@ header p {
   font-weight: 800;
 }
 
-/* Теги коду всередині тексту */
 code {
   background-color: #F3F4F6;
-  color: #DC2626; /* М'який червоний для акценту */
+  color: #DC2626; 
   padding: 3px 6px;
   border-radius: 6px;
   font-family: 'Courier New', Courier, monospace;
@@ -164,7 +161,6 @@ code {
   border: none;
 }
 
-/* Головна кнопка (Синя) */
 .btn-primary {
   background-color: var(--accent-blue);
   color: #FFFFFF;
@@ -176,7 +172,6 @@ code {
   box-shadow: 0 4px 6px rgba(59, 130, 246, 0.4);
 }
 
-/* Другорядна кнопка (Закладки) */
 .btn-secondary {
   background-color: #F9FAFB;
   color: var(--text-main);
@@ -187,6 +182,13 @@ code {
   background-color: #F3F4F6;
   border-color: #9CA3AF;
   color: #111827;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
 }
 
 /* =========================================
@@ -203,7 +205,6 @@ code {
   position: relative;
 }
 
-/* Крапка на таймлайні */
 .changelog-item::before {
   content: '';
   position: absolute;
@@ -213,7 +214,7 @@ code {
   height: 12px;
   border-radius: 50%;
   background: var(--accent-blue);
-  border: 3px solid var(--card-bg); /* Білий контур для відокремлення */
+  border: 3px solid var(--card-bg); 
 }
 
 .changelog-version {
@@ -270,11 +271,10 @@ footer {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
-/* Для повідомлення про успішне копіювання */
 #status {
   text-align: center;
   font-size: 0.85rem;
-  color: #10B981; /* Зелений для успіху */
+  color: #10B981; 
   margin-top: 12px;
   min-height: 1.5em;
 }
