@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnCdUa = document.getElementById('cd-ua-bookmark-btn');
     if(btnCdUa) { 
       btnCdUa.href = makeBookmarklet(cdUaRaw); 
-      btnCdUa.textContent = "🔖 Перетягніть на панель (UA)"; 
+      btnCdUa.textContent = "🔖 Перетягнути до закладок (UA)"; 
     }
 
   } catch (error) {
