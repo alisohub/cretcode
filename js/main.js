@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnCdPl = document.getElementById('cd-pl-bookmark-btn');
     if(btnCdPl) { 
       btnCdPl.href = makeBookmarklet(cdPlRaw); 
-      btnCdPl.textContent = "🔖 Przeciągnij do paska (\ud83c\uddf5\ud83c\uddf1)"; 
+      btnCdPl.textContent = "🔖 Przeciągnij do paska (PL)"; 
     }
 
     const btnCdUa = document.getElementById('cd-ua-bookmark-btn');
