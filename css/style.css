@@ -278,6 +278,7 @@ footer {
   margin-top: 12px;
   min-height: 1.5em;
 }
+
 /* =========================================
    Секретний блок (Тільки для своїх)
 ========================================= */
@@ -301,6 +302,12 @@ footer {
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
 }
 
+/* ДОДАНО: виправлення для блоку з текстом */
+.secret-content {
+  flex: 1;
+  min-width: 0;
+}
+
 .secret-content h3 {
   font-size: 1.15rem;
   font-weight: 700;
@@ -315,6 +322,13 @@ footer {
   color: #D1D5DB;
   line-height: 1.6;
   margin: 0;
+  
+  /* ДОДАНО: виправлення перенесення і обрізання тексту */
+  white-space: normal;
+  word-wrap: break-word;
+  overflow: visible;
+  display: block;
+  -webkit-line-clamp: unset;
 }
 
 .secret-content strong {
@@ -325,30 +339,7 @@ footer {
   color: #EF4444; /* Червоний акцент на "не паліться" */
   font-weight: 700;
 }
-/* =========================================
-   Виправлення обрізки тексту у Секретному блоці
-========================================= */
 
-.secret-content {
-  flex: 1; /* Дозволяє текстовому блоку займати весь вільний простір */
-  min-width: 0; /* Запобігає виштовхуванню тексту за межі батьківського flex-контейнера */
-}
-
-.secret-content p {
-  font-size: 0.95rem;
-  color: #D1D5DB;
-  line-height: 1.6;
-  margin: 0;
-  
-  /* Гарантуємо, що текст буде переноситися на нові рядки */
-  white-space: normal; 
-  word-wrap: break-word;
-  overflow: visible; 
-  
-  /* Скидаємо будь-які обмеження кількості рядків (якщо вони десь успадкувалися) */
-  display: block; 
-  -webkit-line-clamp: unset; 
-}
 /* =========================================
    Стилізація кнопки Telegram
 ========================================= */
@@ -372,4 +363,3 @@ footer {
 .telegram-btn:hover svg {
   transform: scale(1.1);
 }
-
