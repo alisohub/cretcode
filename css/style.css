@@ -278,3 +278,74 @@ footer {
   margin-top: 12px;
   min-height: 1.5em;
 }
+/* =========================================
+   Секретний блок (Тільки для своїх)
+========================================= */
+.secret-box {
+  max-width: 600px;
+  margin: 60px auto 0;
+  background: #111827; /* Темно-вугільний фон для контрасту */
+  color: #F9FAFB;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #374151;
+}
+
+.secret-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+}
+
+.secret-content h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #FCD34D; /* Золотий акцент */
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.secret-content p {
+  font-size: 0.95rem;
+  color: #D1D5DB;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.secret-content strong {
+  color: #FFFFFF;
+}
+
+.secret-content b {
+  color: #EF4444; /* Червоний акцент на "не паліться" */
+  font-weight: 700;
+}
+
+/* =========================================
+   Стилізація кнопки Telegram
+========================================= */
+.telegram-btn {
+  background: #FFFFFF;
+  color: #229ED9; /* Офіційний колір Telegram */
+  border-color: #E5E7EB;
+  font-weight: 600;
+}
+
+.telegram-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.telegram-btn:hover {
+  background: #F0F9FF;
+  color: #1CA0EB;
+  border-color: #BAE6FD;
+}
+
+.telegram-btn:hover svg {
+  transform: scale(1.1);
+}
