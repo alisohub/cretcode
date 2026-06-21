@@ -76,12 +76,15 @@
 
   const box = document.createElement('div');
   box.setAttribute('data-reit-counter', 'mini');
-  box.style = 'position:fixed;bottom:34px;left:300px;background:transparent;color:' + manualColor + ';padding:4px 8px;font-size:' + miniSize + 'px;font-family:' + technoFont + ';z-index:999999;border-radius:12px;opacity:' + miniOpacity / 100 + ';cursor:pointer;user-select:none;font-weight:900;letter-spacing:0;text-shadow: 0px 1px 3px rgba(255,255,255,0.8);';
+  /* ТУТ ПРИБРАНО text-shadow */
+  box.style = 'position:fixed;bottom:34px;left:300px;background:transparent;color:' + manualColor + ';padding:4px 8px;font-size:' + miniSize + 'px;font-family:' + technoFont + ';z-index:999999;border-radius:12px;opacity:' + miniOpacity / 100 + ';cursor:pointer;user-select:none;font-weight:900;letter-spacing:0;';
   document.body.appendChild(box);
 
   const panel = document.createElement('div');
   panel.setAttribute('data-reit-counter', 'panel');
   panel.style = 'position:fixed;top:58px;bottom:24px;right:20px;background:rgba(248, 250, 252, 0.95);color:#1e293b;padding:14px;border-radius:16px;z-index:999999;font-family:' + technoFont + ';width:320px;overflow-y:auto;box-sizing:border-box;backdrop-filter:blur(12px);box-shadow:0 10px 30px -5px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);scrollbar-width:thin;transform:translateX(0);opacity:1;pointer-events:auto;transition:transform .35s cubic-bezier(0.4, 0, 0.2, 1),opacity .35s ease';
+  
+  /* ТУТ ПРИБРАНО box-shadow з блоку Pozostało */
   panel.innerHTML = `
     <div id="mainView">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(0,0,0,0.06); padding-bottom:10px;">
@@ -95,7 +98,7 @@
         </div>
       </div>
       <div style="display:grid; grid-template-columns:1fr; gap:8px; margin-bottom:12px;">
-        <div style="background:linear-gradient(135deg, #3b82f6, #2563eb); color:white; padding:12px 8px; border-radius:10px; text-align:center; text-transform:uppercase; box-shadow:0 2px 8px rgba(59, 130, 246, 0.25);">
+        <div style="background:linear-gradient(135deg, #3b82f6, #2563eb); color:white; padding:12px 8px; border-radius:10px; text-align:center; text-transform:uppercase;">
           <div style="font-size:10px; font-weight:900; opacity:0.9; margin-bottom:2px;">Pozostało</div>
           <div id="left" style="font-size:22px; font-weight:900;">0</div>
         </div>
