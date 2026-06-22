@@ -13,7 +13,7 @@
   const shiftName = night ? 'night' : 'day';
 
   let total = 0, problemTotal = 0, seen = '', start = Date.now(), lastTrigger = '-';
-  let targetPerHour = 28, beforeBreak = 0, open = true, grace = 4 * 60 * 1000;
+  let targetPerHour = 44, beforeBreak = 0, open = true, grace = 4 * 60 * 1000;
   let offRemain = 30 * 60 * 1000, lastActivityTime = Date.now(), offLastTick = Date.now();
   let triggerText = 'Wprowadź pojemnik', problemText = 'Zeskanuj - PROBLEM-SOLVE', nlpText = 'Zeskanuj nowy NLP';
   let skipNextPack = false, showRatePercent = false, showLeftInsteadTotal = false, autoStatusColor = false;
@@ -179,16 +179,15 @@
     const p = panel.querySelector('#miniPreview'); if (p) { p.textContent = miniText(); p.style.color = miniColor(rate); }
   }
   
-  // Додано loadState() перед модифікацією
   function addPacks(n) { 
     n = parseInt(n) || 0; if (n <= 0) return; 
-    loadState(); // Синхронізація з іншими вкладками
+    loadState();
     const slot = getSlot(); hourCounts[slot] += n; 
     recalcTotal(); lastTrigger = 'RĘCZNIE +' + n + ' ' + timeNow(); 
     markActivity(); saveState(true); render(); 
   }
   function removePack() { 
-    loadState(); // Синхронізація
+    loadState();
     const slot = getSlot(); 
     if (hourlyTotal() > 0) { 
         hourCounts[slot] = Math.max(0, hourCounts[slot] - 1); 
@@ -198,7 +197,7 @@
   }
   function addProblem(n) { 
     n = parseInt(n) || 0; if (n <= 0) return; 
-    loadState(); // Синхронізація
+    loadState();
     problemTotal += n; problemCounts[getSlot()] += n; 
     lastTrigger = 'PROBLEM ' + timeNow(); markActivity(); saveState(true); render(); 
   }
@@ -208,7 +207,7 @@
       inp.oninput = (e) => { hourCounts[e.target.getAttribute('data-h')] = Math.max(0, parseInt(e.target.value) || 0); recalcTotal(); updateTop(); };
       inp.onblur = (e) => { 
           let newVal = Math.max(0, parseInt(e.target.value) || 0);
-          loadState(); // Синхронізація перед ручним перезаписом
+          loadState();
           hourCounts[e.target.getAttribute('data-h')] = newVal;
           lastTrigger = 'RĘCZNIE ' + timeNow(); saveState(true); renderHours(true); render(); 
       };
@@ -257,7 +256,6 @@
     panel.querySelector('#lt').textContent = lastTrigger; panel.querySelector('#off').textContent = fmt(offRemain);
     panel.querySelector('#pb').textContent = problemTotal; panel.querySelector('#left').textContent = Math.max(0, shiftTarget() - total);
     applyMini(); renderHours(false); 
-    // Видалено щосекундне saveState(); щоб вкладки не конфліктували
   }
   
   function scan() {
@@ -272,7 +270,6 @@
   function showSettings(v) { panel.querySelector('#mainView').style.display = v ? 'none' : 'block'; panel.querySelector('#settingsView').style.display = v ? 'block' : 'none'; applyMini(); }
 
   setInterval(scan, 1000); setInterval(render, 1000); window.addEventListener('beforeunload', () => saveState(true)); box.onclick = toggleUI;
-  // Видалено слухач клавіатури (document.addEventListener('keydown'...))
 
   panel.querySelector('#settingsBtn').onclick = () => showSettings(true); panel.querySelector('#backBtn').onclick = () => showSettings(false);
   panel.querySelector('#ratePercent').checked = showRatePercent; panel.querySelector('#leftMode').checked = showLeftInsteadTotal; panel.querySelector('#autoColor').checked = autoStatusColor;
@@ -286,7 +283,6 @@
   panel.querySelector('#o').oninput = (e) => { miniOpacity = parseInt(e.target.value) || 0; box.style.opacity = miniOpacity / 100; saveState(true); };
   panel.querySelector('#target').oninput = (e) => { targetPerHour = parseInt(e.target.value) || 44; saveState(true); render(); };
   
-  // Додано: Слухач змін з інших вкладок
   window.addEventListener('storage', (e) => {
     if (e.key === saveKey) {
       loadState();
