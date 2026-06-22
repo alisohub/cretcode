@@ -420,3 +420,49 @@ footer {
   border-radius: 0; /* Робимо крапку квадратною */
   animation: none; /* У бруталізмі краще без плавних пульсацій */
 }
+/* Стилі для вкладок */
+.tabs-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 8px;
+}
+
+.tab-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #475569;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #1e293b;
+}
+
+.tab-btn.active {
+  background: #3b82f6; /* Синій колір, як у вашому дизайні */
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.tab-content {
+  display: none; /* Ховаємо всі вкладки за замовчуванням */
+  animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+  display: block; /* Показуємо тільки активну */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
