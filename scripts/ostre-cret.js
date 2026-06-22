@@ -206,7 +206,7 @@
   function hourlyTotal() { return hours.reduce((s, h) => s + (parseInt(hourCounts[h]) || 0), 0); }
   function recalcTotal() { total = hourlyTotal() + (parseInt(beforeBreak) || 0); }
   function currentRate() { const h = getActiveHours(); return h > 0 ? hourlyTotal() / h : 0; }
-  function shiftTarget() { return targetPerHour * 10; }
+  function shiftTarget() { return (targetPerHour * 10) + Math.round(targetPerHour / 2); }
   function markActivity() { lastActivityTime = Date.now(); offLastTick = Date.now(); }
   function miniColor(rate) {
     if (!autoStatusColor) return manualColor;
@@ -280,8 +280,10 @@
     const visibleHours = night ? nightHours : dayHours;
     const max = Math.max(targetPerHour, beforeBreak, ...visibleHours.map((h) => hourCounts[h] || 0), 1);
     let rows = visibleHours.map((h, i) => {
-      const val = hourCounts[h] || 0, bars = Math.min(100, Math.round((val / max) * 100)), good = val >= targetPerHour;
-      const cumTarget = (i + 1) * targetPerHour;
+      const isLastSlot = i === visibleHours.length - 1;
+      const slotTarget = isLastSlot ? Math.round(targetPerHour / 2) : targetPerHour;
+      const cumTarget = (i * targetPerHour) + slotTarget;
+      const val = hourCounts[h] || 0, bars = Math.min(100, Math.round((val / max) * 100)), good = val >= slotTarget;
       return `<div style="display:grid; grid-template-columns:40px 45px 30px 1fr; gap:6px; align-items:center; background:#ffffff; border:1px solid rgba(0,0,0,0.05); border-radius:8px; padding:6px 10px; margin-bottom:6px; border-left:4px solid ${good ? '#22c55e' : '#cbd5e1'}; width:100%; box-sizing:border-box;">
         <b style="font-size:12px; text-align:left; color:#475569;">${h}</b>
         <input class="hc" data-h="${h}" type="text" inputmode="numeric" value="${val}" style="width:100%; padding:4px 6px; border:1px solid #e2e8f0; border-radius:4px; background:#f8fafc; color:#1e293b; text-align:center; font-family:${technoFont}; font-weight:900; outline:none; font-size:12px; box-sizing:border-box;">
