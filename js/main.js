@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnOstreRefarb = document.getElementById('ostre-refarb-btn');
     if(btnOstreRefarb) { 
       btnOstreRefarb.href = makeBookmarklet(ostreRefarbRaw); 
-      btnOstreRefarb.textContent = "🔖 Przeciągnij do paska (Refarb)"; 
+      btnOstreRefarb.textContent = "🔖 Przeciągnij do paska (🐦‍🔥Refarb)"; 
     }
 
   } catch (error) {
