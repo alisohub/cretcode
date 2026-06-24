@@ -108,7 +108,7 @@
 
   const panel = document.createElement('div');
   panel.setAttribute('data-reit-counter', 'panel');
-  // DevTools styling: #f3f3f3 background, thin #ccc borders, no rounded corners, tiny monospace font.
+  
   panel.style = 'position:fixed;top:58px;bottom:24px;right:20px;background:#f3f3f3;color:#333;padding:4px;border:1px solid #ccc;z-index:999999;font-family:' + technoFont + ';font-size:10px;width:260px;overflow-y:auto;overflow-x:hidden;box-sizing:border-box;transform:translateX(0);opacity:1;pointer-events:auto;transition:none;';
 
   panel.innerHTML = `
