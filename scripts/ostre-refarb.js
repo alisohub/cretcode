@@ -93,7 +93,7 @@
     return ms > 0 ? ms / 3600000 : 0;
   }
 
-  // CSS Styles
+  
   const styles = document.createElement('style');
   styles.textContent = `
     .reit-mini {
