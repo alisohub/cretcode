@@ -16,7 +16,7 @@
   let targetPerHour = 28, beforeBreak = 0, open = true, grace = 4 * 60 * 1000, selectedBreak = 1;
   let offRemain = 30 * 60 * 1000, lastActivityTime = Date.now(), offLastTick = Date.now();
   let triggerText = 'Wprowadź pojemnik', problemText = 'Zeskanuj - PROBLEM-SOLVE', nlpText = 'Zeskanuj nowy NLP';
-  let skipNextPack = false, showRatePercent = false, showLeftInsteadTotal = false, autoStatusColor = false;
+  let skipNextPack = false, showRatePercent = false, showLeftInsteadTotal = false, autoStatusColor = false, ignoreNLP = false;
   let manualColor = '#808080', miniOpacity = 100, miniSize = 12, miniPos = 'tl', hourCounts = {}, problemCounts = {}, lastSave = 0;
 
   function initCounts() { hours.forEach((h) => { if (hourCounts[h] == null) hourCounts[h] = 0; if (problemCounts[h] == null) problemCounts[h] = 0; }); }
@@ -34,6 +34,7 @@
       showRatePercent = !!s.showRatePercent;
       showLeftInsteadTotal = !!s.showLeftInsteadTotal;
       autoStatusColor = !!s.autoStatusColor;
+      ignoreNLP = !!s.ignoreNLP;
       manualColor = s.manualColor || '#808080';
       miniPos = s.miniPos || 'tl';
       miniOpacity = Math.min(100, Math.max(0, s.miniOpacity !== undefined ? parseInt(s.miniOpacity) : 100));
@@ -51,7 +52,7 @@
     const now = Date.now();
     if (!force && now - lastSave < 1500) return;
     lastSave = now;
-    try { localStorage.setItem(saveKey, JSON.stringify({ shift: shiftName, savedAt: now, start, problemTotal, beforeBreak, targetPerHour, selectedBreak, offRemain, showRatePercent, showLeftInsteadTotal, autoStatusColor, manualColor, miniOpacity, miniSize, miniPos, hourCounts, problemCounts, lastTrigger })); } catch (_) {}
+    try { localStorage.setItem(saveKey, JSON.stringify({ shift: shiftName, savedAt: now, start, problemTotal, beforeBreak, targetPerHour, selectedBreak, offRemain, showRatePercent, showLeftInsteadTotal, autoStatusColor, ignoreNLP, manualColor, miniOpacity, miniSize, miniPos, hourCounts, problemCounts, lastTrigger })); } catch (_) {}
   }
 
   loadState(); initCounts();
@@ -170,6 +171,7 @@
       </div>
     </div>
     <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:12px; margin-bottom:10px; width:100%; box-sizing:border-box;">
+      <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Ignoruj NLP <input id="ignoreNLP" type="checkbox" style="width:18px; height:18px; accent-color:#ef4444; margin:0; cursor:pointer;" ${ignoreNLP ? 'checked' : ''}></label>
       <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Tempo % / h <input id="ratePercent" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${showRatePercent ? 'checked' : ''}></label>
       <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Pozostało zamiast sumy <input id="leftMode" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${showLeftInsteadTotal ? 'checked' : ''}></label>
       <label style="display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Auto-kolor tempa <input id="autoColor" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${autoStatusColor ? 'checked' : ''}></label>
@@ -323,7 +325,13 @@
   
   function scan() {
     const txt = document.body.innerText || '', m = cnt(txt, triggerText), p = cnt(seen, triggerText), pm = cnt(txt, problemText), pp = cnt(seen, problemText), nlpm = cnt(txt, nlpText), nlpp = cnt(seen, nlpText);
-    if (nlpm > nlpp) { skipNextPack = true; lastTrigger = 'NLP: POMIŃ NASTĘPNĄ ' + timeNow(); markActivity(); saveState(true); render(); }
+    
+    if (!ignoreNLP && nlpm > nlpp) { 
+        skipNextPack = true; 
+        lastTrigger = 'NLP: POMIŃ NASTĘPNĄ ' + timeNow(); 
+        markActivity(); saveState(true); render(); 
+    }
+    
     if (pm > pp) addProblem(pm - pp);
     else if (m > p) { 
       let diff = m - p; 
@@ -346,9 +354,10 @@
   setInterval(scan, 1000); setInterval(render, 1000); window.addEventListener('beforeunload', () => saveState(true)); box.onclick = toggleUI;
 
   panel.querySelector('#settingsBtn').onclick = () => showSettings(true); panel.querySelector('#backBtn').onclick = () => showSettings(false);
-  panel.querySelector('#ratePercent').checked = showRatePercent; panel.querySelector('#leftMode').checked = showLeftInsteadTotal; panel.querySelector('#autoColor').checked = autoStatusColor;
+  panel.querySelector('#ignoreNLP').checked = ignoreNLP; panel.querySelector('#ratePercent').checked = showRatePercent; panel.querySelector('#leftMode').checked = showLeftInsteadTotal; panel.querySelector('#autoColor').checked = autoStatusColor;
   panel.querySelector('#breakSel').onchange = (e) => { selectedBreak = parseInt(e.target.value) || 0; saveState(true); updateHeader(); render(); };
   panel.querySelector('#pos').onchange = (e) => { miniPos = e.target.value; applyMiniPos(); saveState(true); };
+  panel.querySelector('#ignoreNLP').onchange = (e) => { ignoreNLP = e.target.checked; saveState(true); };
   panel.querySelector('#ratePercent').onchange = (e) => { showRatePercent = e.target.checked; saveState(true); applyMini(); };
   panel.querySelector('#leftMode').onchange = (e) => { showLeftInsteadTotal = e.target.checked; saveState(true); applyMini(); };
   panel.querySelector('#autoColor').onchange = (e) => { autoStatusColor = e.target.checked; saveState(true); applyMini(); };
