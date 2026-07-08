@@ -347,9 +347,9 @@
     if (txt.includes('Brakujące części')) {
       let acted = false;
       const qList = [
-        { q: 'Czy brakuje części', a: 'Nie' },
-        { q: 'Jeśli ten produkt jest wysyłany w wielu', a: 'Nie' },
-        { q: 'Jeśli ten produkt jest wysyłany w ilości', a: 'Produkt nie jest' }
+        { q: 'Czy brakuje części', k: '1' },
+        { q: 'Jeśli ten produkt jest wysyłany w wielu', k: '2' },
+        { q: 'Jeśli ten produkt jest wysyłany w ilości', k: '1' }
       ];
 
       qList.forEach(item => {
@@ -358,33 +358,23 @@
         );
 
         qElements.forEach(el => {
-          if (el.closest('[data-q-handled]')) return;
+          let container = el.parentElement || el;
+          if (container.closest('[data-q-handled]')) return;
 
-          let container = el.parentElement;
-          let found = false;
+          container.setAttribute('data-q-handled', 'true'); 
+          
+          const target = document.activeElement || document.body;
+          const keyCode = item.k.charCodeAt(0);
+          
+          target.dispatchEvent(new KeyboardEvent('keydown', { key: item.k, code: 'Digit' + item.k, keyCode: keyCode, which: keyCode, bubbles: true, cancelable: true }));
+          target.dispatchEvent(new KeyboardEvent('keyup', { key: item.k, code: 'Digit' + item.k, keyCode: keyCode, which: keyCode, bubbles: true, cancelable: true }));
 
-          for (let i = 0; i < 4; i++) { 
-            if (!container) break;
-            
-            const answers = Array.from(container.querySelectorAll('button, label, span, div[role="button"], option, input[type="radio"]'))
-              .filter(ans => ans.textContent && ans.textContent.trim() === item.a);
-            
-            const visibleAnswer = answers.find(ans => ans.offsetParent !== null);
-            
-            if (visibleAnswer) {
-              visibleAnswer.click();
-              container.setAttribute('data-q-handled', 'true'); 
-              found = true;
-              acted = true;
-              break;
-            }
-            container = container.parentElement;
-          }
+          acted = true;
         });
       });
 
       if (acted) {
-        lastTrigger = 'AUTO: BRAKUJĄCE ' + timeNow();
+        lastTrigger = 'AUTO: KLAWISZE ' + timeNow();
         markActivity();
         saveState(true);
         render();
@@ -441,4 +431,3 @@
 
   render(); scan(); renderHours(true); applyMini(); updateHeader();
 })();
-
