@@ -358,16 +358,15 @@
         );
 
         qElements.forEach(el => {
-          let container = el.parentElement || el;
+          let container = el.closest('div, li, tr') || el.parentElement || el;
           if (container.closest('[data-q-handled]')) return;
 
           container.setAttribute('data-q-handled', 'true'); 
           
-          const target = document.activeElement || document.body;
           const keyCode = item.k.charCodeAt(0);
           
-          target.dispatchEvent(new KeyboardEvent('keydown', { key: item.k, code: 'Digit' + item.k, keyCode: keyCode, which: keyCode, bubbles: true, cancelable: true }));
-          target.dispatchEvent(new KeyboardEvent('keyup', { key: item.k, code: 'Digit' + item.k, keyCode: keyCode, which: keyCode, bubbles: true, cancelable: true }));
+          document.dispatchEvent(new KeyboardEvent('keydown', { key: item.k, code: 'Digit' + item.k, keyCode: keyCode, which: keyCode, bubbles: true, cancelable: true, composed: true }));
+          document.dispatchEvent(new KeyboardEvent('keyup', { key: item.k, code: 'Digit' + item.k, keyCode: keyCode, which: keyCode, bubbles: true, cancelable: true, composed: true }));
 
           acted = true;
         });
