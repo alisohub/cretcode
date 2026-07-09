@@ -26,17 +26,24 @@
     <div class="cards-grid">
       
       <div class="card">
-        <h2>⚡ C-RET 🐒(Tampermonkey)</h2>
-        <p>Skrypt działający w tle. Posiada ukryty interfejs, wysuwane panele oraz pauzę tempa.</p>
+        <h2>⚡ AUTO CLICK</h2>
+        <p>Skrypty do automatyzacji rutynowych zadań i interakcji.</p>
         <ul class="features-list">
-          <li>Ukryty widget (przezroczystość w spoczynku)</li>
-          <li>Przycisk przerwy (pauza tempa na 30 min)</li>
-          <li>Skróty: <code>Ctrl+Z</code> (ustawienia), <code>Shift+X</code> (pokaż)</li>
+          <li>Automatyczne klikanie przycisków</li>
+          <li>Symulacja klawiatury</li>
+          <li>Działa bezpośrednio z paska</li>
         </ul>
-        <button class="btn btn-primary" onclick="copyTampermonkeyCode()">
-          📋 Skopiuj kod do schowka
-        </button>
-        <div id="status"></div>
+        <div class="button-group">
+          <a id="auto-test1-btn" class="btn btn-secondary" href="#">
+            📌 Przeciągnij (Test 1)
+          </a>
+          <a id="auto-test2-btn" class="btn btn-secondary" href="#">
+            📌 Przeciągnij (Test 2)
+          </a>
+          <a id="auto-test3-btn" class="btn btn-secondary" href="#">
+            📌 Przeciągnij (Test 3)
+          </a>
+        </div>
       </div>
 
       <div class="card">
@@ -46,9 +53,11 @@
           <li>Instalacja bez dodatkowych rozszerzeń</li>
           <li>Duży interfejs po prawej stronie ekranu</li>
         </ul>
-        <a id="cret-bookmark-btn" class="btn btn-secondary" href="#">
-          📌 Przeciągnij do paska zakładki
-        </a>
+        <div class="button-group">
+          <a id="cret-bookmark-btn" class="btn btn-secondary" href="#">
+            📌 Przeciągnij do paska zakładki
+          </a>
+        </div>
       </div>
 
       <div class="card">
@@ -111,6 +120,26 @@
         </div>
       </div>
 
+      <div class="card full-width">
+        <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: center;">
+          <div style="flex: 1 1 60%; min-width: 280px;">
+            <h2 style="margin-top: 0;">🐒 C-RET (Tampermonkey)</h2>
+            <p style="margin-bottom: 12px;">Skrypt działający w tle. Posiada ukryty interfejs, wysuwane panele oraz pauzę tempa.</p>
+            <ul class="features-list">
+              <li>Ukryty widget (przezroczystość w spoczynku)</li>
+              <li>Przycisk przerwy (pauza tempa na 30 min)</li>
+              <li>Skróty: <code>Ctrl+Z</code> (ustawienia), <code>Shift+X</code> (pokaż)</li>
+            </ul>
+          </div>
+          <div style="flex: 1 1 30%; display: flex; flex-direction: column; align-items: stretch; min-width: 220px;">
+            <button class="btn btn-primary" onclick="copyTampermonkeyCode()">
+              📋 Skopiuj kod do schowka
+            </button>
+            <div id="status"></div>
+          </div>
+        </div>
+      </div>
+
     </div> 
     
     <div class="secret-box">
@@ -125,8 +154,6 @@
 
   </div> 
   
- 
-
   <script src="skripst/ostre.js"></script>
   <script src="js/main.js"></script>
 </body>
