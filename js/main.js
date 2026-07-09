@@ -31,14 +31,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     // Асинхронно завантажуємо всі скрипти з папки scripts/
-    const [cretRes, cdPlRes, cdUaRes, tmRes, ostreCretRes, ostreWhdRes, ostreRefarbRes] = await Promise.all([
+    const [
+      cretRes, 
+      cdPlRes, 
+      cdUaRes, 
+      tmRes, 
+      ostreCretRes, 
+      ostreWhdRes, 
+      ostreRefarbRes,
+      test1Res, 
+      test2Res, 
+      test3Res
+    ] = await Promise.all([
       fetch('scripts/cret.js'),
       fetch('scripts/clean-decant-pl.js'),
       fetch('scripts/clean-decant-ua.js'),
       fetch('scripts/tampermonkey.js'),
       fetch('scripts/ostre-cret.js'),   // Скрипт для C-Ret
       fetch('scripts/ostre-whd.js'),    // Скрипт для WHD
-      fetch('scripts/ostre-refarb.js')  // Скрипт для Refarb
+      fetch('scripts/ostre-refarb.js'), // Скрипт для Refarb
+      fetch('scripts/test1.js'),        // Скрипт для Auto Click Test 1
+      fetch('scripts/test2.js'),        // Скрипт для Auto Click Test 2
+      fetch('scripts/test3.js')         // Скрипт для Auto Click Test 3
     ]);
 
     // Отримуємо текст
@@ -48,6 +62,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const ostreCretRaw = await ostreCretRes.text();
     const ostreWhdRaw = await ostreWhdRes.text();
     const ostreRefarbRaw = await ostreRefarbRes.text();
+    const test1Raw = await test1Res.text();
+    const test2Raw = await test2Res.text();
+    const test3Raw = await test3Res.text();
     tampermonkeyRawCode = await tmRes.text(); // Зберігаємо для копіювання
 
     // Призначаємо букмарклети кнопкам C-Ret та Clean-Decant
@@ -86,6 +103,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     if(btnOstreRefarb) { 
       btnOstreRefarb.href = makeBookmarklet(ostreRefarbRaw); 
       btnOstreRefarb.textContent = "🔖 Przeciągnij do paska (🐦‍🔥Refarb)"; 
+    }
+
+    // Призначаємо букмарклети для кнопок Auto Click
+    const btnTest1 = document.getElementById('auto-test1-btn');
+    if(btnTest1) { 
+      btnTest1.href = makeBookmarklet(test1Raw); 
+      btnTest1.textContent = "🔖 Przeciągnij (Test 1)"; 
+    }
+
+    const btnTest2 = document.getElementById('auto-test2-btn');
+    if(btnTest2) { 
+      btnTest2.href = makeBookmarklet(test2Raw); 
+      btnTest2.textContent = "🔖 Przeciągnij (Test 2)"; 
+    }
+
+    const btnTest3 = document.getElementById('auto-test3-btn');
+    if(btnTest3) { 
+      btnTest3.href = makeBookmarklet(test3Raw); 
+      btnTest3.textContent = "🔖 Przeciągnij (Test 3)"; 
     }
 
   } catch (error) {
