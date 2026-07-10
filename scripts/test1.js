@@ -7,7 +7,6 @@
   function autoClickLpn() {
     const now = Date.now();
     
-    // Якщо з моменту останнього кліку пройшло менше 3 секунд — нічого не робимо
     if (now - lastClickTime < 3000) return; 
 
     const btn = Array.from(document.querySelectorAll('button, a, div[role="button"]')).find(
