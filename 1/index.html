@@ -1,1 +1,148 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skrypty Narzędzia</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
 
+  <div class="container">
+    <header>
+      <div class="status-badge status-online" id="script-status">
+        <span class="pulse-dot"></span>
+        <span class="status-text"> Zaktualizowano 20.06</span>
+      </div>
+    </header>
+
+    <div class="cards-grid">
+      
+      <div class="card">
+        <h2>⚡ AUTO CLICK</h2>
+        <p>Skrypt test .</p>
+        <ul class="features-list">
+          <li>Automatyczne klikanie przycisków</li>
+          <li>Symulacja klawiatury</li>
+        </ul>
+        <div class="button-group">
+          <a id="auto-test1-btn" class="btn btn-secondary" href="#">
+            📌 Przeciągnij (Test 1)
+          </a>
+          <a id="auto-test2-btn" class="btn btn-secondary" href="#">
+            📌 Przeciągnij (Test 2)
+          </a>
+          <a id="auto-test3-btn" class="btn btn-secondary" href="#">
+            📌 Przeciągnij (Test 3)
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🦖 C-RET (Zakładka)</h2>
+        <p>Tradycyjny licznik w formie zakładki (dawniej REIT+). Wystarczy przeciągnąć przycisk na pasek przeglądarki.</p>
+        <ul class="features-list">
+          <li>Instalacja bez dodatkowych rozszerzeń</li>
+          <li>Duży interfejs po prawej stronie ekranu</li>
+        </ul>
+        <div class="button-group">
+          <a id="cret-bookmark-btn" class="btn btn-secondary" href="#">
+            📌 Przeciągnij do paska zakładki
+          </a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📦 Clean-Decant (PL / UA)</h2>
+        <p>Specjalna wersja licznika. Wybierz odpowiednią wersję językową do swojego interfejsu.</p>
+        <ul class="features-list">
+          <li>Odświeżony interfejs bez neonu i cieni</li>
+          <li>Reit docelowy / Цільовий Reit: 110/h</li>
+          <li>Wybór pozycji widgetu na ekranie</li>
+        </ul>
+        <div class="button-group">
+          <a id="cd-pl-bookmark-btn" class="btn btn-secondary" href="#">
+            📌 Przeciągnij do paska (PL)
+          </a>
+          <a id="cd-ua-bookmark-btn" class="btn btn-secondary" href="#">
+            📌 Перетягнути до закладок (UA)
+          </a>
+        </div>
+      </div>
+
+      <div class="card full-width">
+        <div class="flex-row-card">
+          
+          <div class="flex-text-content">
+            <h2 style="margin-top: 0;">🔪 Ostre (Wielofunkcyjny)</h2>
+            <p style="margin-bottom: 12px;">Kompleksowy zestaw skryptów zoptymalizowany pod różne procesy. Wybierz wersję, która odpowiada Twojemu aktualnemu stanowisku pracy.</p>
+            <ul class="features-list">
+              <li><strong>C-Ret:</strong> Podliczanie docelowego reitu i śledzenie czasu Off-Task.</li>
+              <li><strong>WHD:</strong> Specyficzne triggery dostosowane do Warehouse Deals.</li>
+              <li><strong>Refarb:</strong> Dokładne zliczanie jednostek po odnowieniu.</li>
+            </ul>
+          </div>
+
+          <div class="flex-button-content">
+            <a id="ostre-cret-btn" class="btn btn-secondary" href="#">
+              📌 Przeciągnij (Ostre C-Ret)
+            </a>
+            <a id="ostre-whd-btn" class="btn btn-secondary" href="#">
+              📌 Przeciągnij (Ostre 🪛WHD)
+            </a>
+            <a id="ostre-refarb-btn" class="btn btn-secondary" href="#">
+              📌 Przeciągnij (Ostre 🐦‍🔥Refarb)
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card full-width">
+        <h2>🔄 Dziennik zmian</h2>
+        <p style="margin-bottom: 24px;">Historia aktualizacji skryptów.</p>
+        <div class="changelog-wrapper">
+          <div class="changelog-item">
+            <div class="changelog-version">v6.9 Pełna poprawka analizy zmiennych</div>
+            <div class="changelog-date">Останнє оновлення</div>
+            <div class="changelog-notes">
+              Naprawiono krytyczny błąd związany z uciewaniem zmiennych w zakładkach, który powodował wyświetlanie błędów przez interfejs lub jego całkowite nieładowanie.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card full-width">
+        <div class="flex-row-card">
+          <div class="flex-text-content">
+            <h2 style="margin-top: 0;">🐒 C-RET (Tampermonkey)</h2>
+            <p style="margin-bottom: 12px;">Skrypt działający w tle. Posiada ukryty interfejs, wysuwane panele oraz pauzę tempa.</p>
+            <ul class="features-list">
+              <li>Ukryty widget (przezroczystość w spoczynku)</li>
+              <li>Przycisk przerwy (pauza tempa na 30 min)</li>
+              <li>Skróty: <code>Ctrl+Z</code> (ustawienia), <code>Shift+X</code> (pokaż)</li>
+            </ul>
+          </div>
+          <div class="flex-button-content">
+            <button class="btn btn-primary" onclick="copyTampermonkeyCode()">
+              📋 Skopiuj kod do schowka
+            </button>
+            <div id="status"></div>
+          </div>
+        </div>
+      </div>
+
+    </div> 
+
+    <div id="hidden-view-counter">
+      <a href="https://www.hitwebcounter.com" target="_blank">
+        <img src="https://hitwebcounter.com/counter/counter.php?page=0000000&style=0001&nbdigits=5&type=page&initCount=0" title="Free Counter" alt="web counter" border="0" />
+      </a>
+    </div>
+
+  </div> 
+  
+  <script src="skripst/ostre.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
