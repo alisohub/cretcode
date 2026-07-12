@@ -466,3 +466,19 @@ footer {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+/* =========================================
+   Прихований лічильник (Аналітика)
+========================================= */
+#hidden-view-counter {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -999;
+}
