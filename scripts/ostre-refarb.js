@@ -340,11 +340,30 @@
     updateHeader();
     applyMini(); renderHours(false); 
   }
+
+  // --- Перехоплення сканера ---
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.keyCode === 13) {
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && active.value) {
+        const val = active.value;
+        const lpnMatch = val.match(/(?:sp)?LPN[\s\-_]*[a-zA-Z0-9]+(?:\s+\d+){0,2}/i);
+        if (lpnMatch && lpnMatch[0]) {
+          const parsedLpn = lpnMatch[0].trim().toUpperCase();
+          if (parsedLpn !== lastLpn) {
+            lastLpn = parsedLpn;
+            saveState(true);
+            render();
+          }
+        }
+      }
+    }
+  });
   
   function scan() {
     const txt = document.body.innerText || '';
     
-    const lpnMatch = txt.match(/(LPN\s*[a-zA-Z0-9]+(?:\s+\d+){0,2})/i);
+    const lpnMatch = txt.match(/(?:sp)?LPN[\s\-_]*[a-zA-Z0-9]+(?:\s+\d+){0,2}/i);
     if (lpnMatch && lpnMatch[0]) {
       const parsedLpn = lpnMatch[0].trim().toUpperCase();
       if (parsedLpn !== lastLpn) {
