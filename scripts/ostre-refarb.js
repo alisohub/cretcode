@@ -236,7 +236,7 @@
     if (showLpnMini && lastLpn !== '-') txt += ' | ' + lastLpn;
     return txt;
   }
-  
+
   function updateHeader() {
     const hdr = panel.querySelector('#mainTitle');
     if (hdr) hdr.innerHTML = 'C-RET' + (selectedBreak > 0 ? ' <span style="font-size:12px; color:#64748b; font-weight:700;">(Przerwa: ' + selectedBreak + ')</span>' : '');
@@ -246,7 +246,7 @@
     const rate = currentRate(); box.innerHTML = miniText(); box.style.color = miniColor(rate);
     const p = panel.querySelector('#miniPreview'); if (p) { p.textContent = miniText(); p.style.color = miniColor(rate); }
   }
-  
+
   function addPacks(n) { 
     n = parseInt(n) || 0; if (n <= 0) return; 
     loadState();
@@ -269,7 +269,7 @@
     problemTotal += n; problemCounts[getSlot()] += n; 
     lastTrigger = 'PROBLEM ' + timeNow(); markActivity(); saveState(true); render(); 
   }
-  
+
   function bindCountInputs() {
     panel.querySelectorAll('.hc').forEach((inp) => {
       inp.oninput = (e) => { hourCounts[e.target.getAttribute('data-h')] = Math.max(0, parseInt(e.target.value) || 0); recalcTotal(); updateTop(); };
@@ -321,27 +321,26 @@
     </div>`;
     panel.querySelector('#hours').innerHTML = rows; bindCountInputs();
   }
-  
+
   function render() {
     recalcTotal(); const now = Date.now();
     if (now - lastActivityTime > grace) { offRemain -= now - offLastTick; if (offRemain < 0) offRemain = 0; }
     offLastTick = now;
-    
+
     let isBreak = isBreakActive();
     panel.querySelector('#lt').textContent = isBreak ? 'TRWA PRZERWA...' : lastTrigger;
     panel.querySelector('#lt').style.color = isBreak ? '#d97706' : '#1e293b';
-    
+
     const lpnPanel = panel.querySelector('#lastLpnPanel');
     if (lpnPanel) lpnPanel.textContent = lastLpn;
-    
+
     panel.querySelector('#off').textContent = fmt(offRemain);
     panel.querySelector('#pb').textContent = problemTotal; panel.querySelector('#left').textContent = Math.max(0, shiftTarget() - total);
-    
+
     updateHeader();
     applyMini(); renderHours(false); 
   }
 
-  // --- Перехоплення сканера ---
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.keyCode === 13) {
       const active = document.activeElement;
@@ -359,10 +358,10 @@
       }
     }
   });
-  
+
   function scan() {
     const txt = document.body.innerText || '';
-    
+
     const lpnMatch = txt.match(/(?:sp)?LPN[\s\-_]*[a-zA-Z0-9]+(?:\s+\d+){0,2}/i);
     if (lpnMatch && lpnMatch[0]) {
       const parsedLpn = lpnMatch[0].trim().toUpperCase();
@@ -380,13 +379,13 @@
     });
 
     const pm = cnt(txt, problemText), pp = cnt(seen, problemText), nlpm = cnt(txt, nlpText), nlpp = cnt(seen, nlpText);
-    
+
     if (!ignoreNLP && nlpm > nlpp) { 
         skipNextPack = true; 
         lastTrigger = 'NLP: POMIŃ NASTĘPNĄ ' + timeNow(); 
         markActivity(); saveState(true); render(); 
     }
-    
+
     if (pm > pp) addProblem(pm - pp);
     else if (m > p) { 
       let diff = m - p; 
@@ -402,7 +401,7 @@
     }
     seen = txt;
   }
-  
+
   function toggleUI() { open = !open; panel.style.transform = open ? 'translateX(0)' : 'translateX(370px)'; panel.style.opacity = open ? '1' : '0'; panel.style.pointerEvents = open ? 'auto' : 'none'; }
   function showSettings(v) { panel.querySelector('#mainView').style.display = v ? 'none' : 'block'; panel.querySelector('#settingsView').style.display = v ? 'block' : 'none'; applyMini(); }
 
@@ -411,7 +410,7 @@
   panel.querySelector('#settingsBtn').onclick = () => showSettings(true); panel.querySelector('#backBtn').onclick = () => showSettings(false);
   panel.querySelector('#ignoreNLP').checked = ignoreNLP; panel.querySelector('#ratePercent').checked = showRatePercent; panel.querySelector('#leftMode').checked = showLeftInsteadTotal; panel.querySelector('#autoColor').checked = autoStatusColor;
   panel.querySelector('#showLpnMini').checked = showLpnMini;
-  
+
   panel.querySelector('#breakSel').onchange = (e) => { selectedBreak = parseInt(e.target.value) || 0; saveState(true); updateHeader(); render(); };
   panel.querySelector('#pos').onchange = (e) => { miniPos = e.target.value; applyMiniPos(); saveState(true); };
   panel.querySelector('#ignoreNLP').onchange = (e) => { ignoreNLP = e.target.checked; saveState(true); };
@@ -424,7 +423,7 @@
   panel.querySelector('#s').oninput = (e) => { miniSize = parseInt(e.target.value) || 12; box.style.fontSize = miniSize + 'px'; saveState(true); };
   panel.querySelector('#o').oninput = (e) => { miniOpacity = parseInt(e.target.value) || 0; box.style.opacity = miniOpacity / 100; saveState(true); };
   panel.querySelector('#target').oninput = (e) => { targetPerHour = parseInt(e.target.value) || 28; saveState(true); render(); };
-  
+
   window.addEventListener('storage', (e) => {
     if (e.key === saveKey) {
       loadState();
