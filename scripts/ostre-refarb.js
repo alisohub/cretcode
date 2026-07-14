@@ -15,9 +15,15 @@
   let total = 0, problemTotal = 0, seen = '', start = Date.now(), lastTrigger = '-';
   let targetPerHour = 28, beforeBreak = 0, open = true, grace = 4 * 60 * 1000, selectedBreak = 1;
   let offRemain = 30 * 60 * 1000, lastActivityTime = Date.now(), offLastTick = Date.now();
-  let triggerText = 'Wprowadź pojemnik', problemText = 'Zeskanuj - PROBLEM-SOLVE', nlpText = 'Zeskanuj nowy NLP';
+  
+  let triggerTexts = ['Wprowadź pojemnik', 'Вкажіть транспортну тару', 'Сканувати новий LPN'];
+  let problemText = 'Zeskanuj - PROBLEM-SOLVE', nlpText = 'Zeskanuj nowy NLP';
+  
   let skipNextPack = false, showRatePercent = false, showLeftInsteadTotal = false, autoStatusColor = false, ignoreNLP = false;
   let manualColor = '#808080', miniOpacity = 100, miniSize = 12, miniPos = 'tl', hourCounts = {}, problemCounts = {}, lastSave = 0;
+  
+  let lastLpn = '-';
+  let showLpnMini = false;
 
   function initCounts() { hours.forEach((h) => { if (hourCounts[h] == null) hourCounts[h] = 0; if (problemCounts[h] == null) problemCounts[h] = 0; }); }
 
@@ -39,6 +45,8 @@
       miniPos = s.miniPos || 'tl';
       miniOpacity = Math.min(100, Math.max(0, s.miniOpacity !== undefined ? parseInt(s.miniOpacity) : 100));
       miniSize = Math.min(45, Math.max(10, parseInt(s.miniSize) || 12));
+      lastLpn = s.lastLpn || '-';
+      showLpnMini = !!s.showLpnMini;
       hourCounts = {}; problemCounts = {};
       hours.forEach((h) => {
         hourCounts[h] = Math.max(0, parseInt(s.hourCounts && s.hourCounts[h]) || 0);
@@ -52,7 +60,7 @@
     const now = Date.now();
     if (!force && now - lastSave < 1500) return;
     lastSave = now;
-    try { localStorage.setItem(saveKey, JSON.stringify({ shift: shiftName, savedAt: now, start, problemTotal, beforeBreak, targetPerHour, selectedBreak, offRemain, showRatePercent, showLeftInsteadTotal, autoStatusColor, ignoreNLP, manualColor, miniOpacity, miniSize, miniPos, hourCounts, problemCounts, lastTrigger })); } catch (_) {}
+    try { localStorage.setItem(saveKey, JSON.stringify({ shift: shiftName, savedAt: now, start, problemTotal, beforeBreak, targetPerHour, selectedBreak, offRemain, showRatePercent, showLeftInsteadTotal, autoStatusColor, ignoreNLP, manualColor, miniOpacity, miniSize, miniPos, hourCounts, problemCounts, lastTrigger, lastLpn, showLpnMini })); } catch (_) {}
   }
 
   loadState(); initCounts();
@@ -93,396 +101,64 @@
     return ms > 0 ? ms / 3600000 : 0;
   }
 
-  
-  const styles = document.createElement('style');
-  styles.textContent = `
-    .reit-mini {
-      position: fixed;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      color: #e2e8f0;
-      padding: 6px 14px;
-      font-family: ${technoFont};
-      z-index: 999999;
-      border-radius: 50px;
-      cursor: pointer;
-      user-select: none;
-      font-weight: 800;
-      letter-spacing: 0.3px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .reit-mini:hover {
-      background: rgba(15, 23, 42, 0.95);
-      border-color: rgba(148, 163, 184, 0.4);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-    }
-    .reit-mini-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #22c55e;
-      box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
-    }
-    .reit-panel {
-      position: fixed;
-      top: 50%;
-      right: 30px;
-      transform: translateY(-50%);
-      background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
-      color: #e2e8f0;
-      padding: 24px;
-      border-radius: 24px;
-      z-index: 999999;
-      font-family: ${technoFont};
-      width: 380px;
-      max-height: 85vh;
-      overflow-y: auto;
-      overflow-x: hidden;
-      box-sizing: border-box;
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(148, 163, 184, 0.1);
-      scrollbar-width: thin;
-      scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 1px solid rgba(148, 163, 184, 0.15);
-    }
-    .reit-panel.hidden {
-      transform: translate(420px, -50%);
-      opacity: 0;
-      pointer-events: none;
-    }
-    .reit-panel::-webkit-scrollbar { width: 6px; }
-    .reit-panel::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 10px; }
-    .reit-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-    }
-    .reit-logo {
-      font-size: 22px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .reit-btn-icon {
-      width: 36px;
-      height: 36px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      color: #e2e8f0;
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-      backdrop-filter: blur(10px);
-    }
-    .reit-btn-icon:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(148, 163, 184, 0.4);
-      transform: scale(1.05);
-    }
-    .reit-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(148, 163, 184, 0.08);
-      border-radius: 16px;
-      padding: 14px;
-      backdrop-filter: blur(10px);
-    }
-    .reit-stat-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .reit-stat-box {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(148, 163, 184, 0.1);
-      border-radius: 14px;
-      padding: 14px;
-      backdrop-filter: blur(10px);
-      transition: all 0.3s;
-    }
-    .reit-stat-box:hover {
-      border-color: rgba(148, 163, 184, 0.25);
-      transform: translateY(-2px);
-    }
-    .reit-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #64748b;
-      margin-bottom: 6px;
-      font-weight: 700;
-    }
-    .reit-value {
-      font-size: 13px;
-      font-weight: 700;
-      color: #f1f5f9;
-      word-break: break-all;
-    }
-    .reit-big-value {
-      font-size: 26px;
-      font-weight: 900;
-    }
-    .reit-problem-card {
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.05) 100%);
-      border: 1px solid rgba(239, 68, 68, 0.2);
-      color: #fca5a5;
-      padding: 16px;
-      border-radius: 14px;
-      text-align: center;
-      font-weight: 900;
-      backdrop-filter: blur(10px);
-    }
-    .reit-left-card {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.05) 100%);
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      color: #93c5fd;
-      padding: 16px;
-      border-radius: 14px;
-      text-align: center;
-      font-weight: 900;
-      backdrop-filter: blur(10px);
-    }
-    .reit-hour-row {
-      display: grid;
-      grid-template-columns: 45px 50px 35px 1fr;
-      gap: 8px;
-      align-items: center;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(148, 163, 184, 0.06);
-      border-radius: 10px;
-      padding: 8px 12px;
-      margin-bottom: 6px;
-      border-left: 4px solid #334155;
-      transition: all 0.2s;
-    }
-    .reit-hour-row:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-left-color: #475569;
-    }
-    .reit-hour-row.good {
-      border-left-color: #22c55e !important;
-    }
-    .reit-input {
-      width: 100%;
-      padding: 6px 8px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 8px;
-      background: rgba(15, 23, 42, 0.8);
-      color: #e2e8f0;
-      text-align: center;
-      font-family: ${technoFont};
-      font-weight: 900;
-      outline: none;
-      font-size: 13px;
-      box-sizing: border-box;
-      transition: all 0.2s;
-    }
-    .reit-input:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    }
-    .reit-settings-input, .reit-settings-select {
-      width: 100%;
-      height: 34px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 10px;
-      cursor: pointer;
-      background: rgba(15, 23, 42, 0.8);
-      color: #e2e8f0;
-      font-family: ${technoFont};
-      font-weight: 700;
-      box-sizing: border-box;
-      padding: 0 10px;
-      outline: none;
-      transition: all 0.2s;
-    }
-    .reit-settings-input:focus, .reit-settings-select:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    }
-    .reit-settings-select option {
-      background: #1e293b;
-      color: #e2e8f0;
-    }
-    .reit-range {
-      width: 100%;
-      accent-color: #3b82f6;
-      box-sizing: border-box;
-    }
-    .reit-btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 12px;
-      font-family: ${technoFont};
-      font-size: 13px;
-      font-weight: 900;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      transition: all 0.3s;
-      box-sizing: border-box;
-    }
-    .reit-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    }
-    .reit-btn-reset {
-      background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
-      color: #1e293b;
-    }
-    .reit-toggle-label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-      font-size: 11px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #cbd5e1;
-      cursor: pointer;
-    }
-    .reit-toggle-checkbox {
-      width: 44px;
-      height: 24px;
-      background: rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
-      position: relative;
-      cursor: pointer;
-      transition: background 0.3s;
-      border: none;
-      appearance: none;
-      -webkit-appearance: none;
-      outline: none;
-    }
-    .reit-toggle-checkbox::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      background: #e2e8f0;
-      border-radius: 50%;
-      transition: all 0.3s;
-    }
-    .reit-toggle-checkbox:checked {
-      background: #3b82f6;
-    }
-    .reit-toggle-checkbox:checked::after {
-      left: 22px;
-      background: white;
-    }
-    .reit-preview {
-      font-size: 18px;
-      font-weight: 900;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      border-radius: 12px;
-      padding: 12px;
-      text-align: center;
-      color: #e2e8f0;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .reit-progress-bar {
-      height: 6px;
-      background: rgba(148, 163, 184, 0.15);
-      border-radius: 999px;
-      overflow: hidden;
-      width: 100%;
-    }
-    .reit-progress-fill {
-      height: 100%;
-      border-radius: 999px;
-      transition: width 0.4s ease;
-    }
-    .reit-progress-fill.blue { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-    .reit-progress-fill.green { background: linear-gradient(90deg, #22c55e, #4ade80); }
-    .reit-progress-fill.gray { background: linear-gradient(90deg, #64748b, #94a3b8); }
-  `;
-  document.head.appendChild(styles);
-
   const box = document.createElement('div');
   box.setAttribute('data-reit-counter', 'mini');
-  box.className = 'reit-mini';
-  const dot = document.createElement('div');
-  dot.className = 'reit-mini-dot';
-  box.appendChild(dot);
-  const boxText = document.createElement('span');
-  box.appendChild(boxText);
+  box.style = 'position:fixed;background:transparent;color:' + manualColor + ';padding:4px 8px;font-size:' + miniSize + 'px;font-family:' + technoFont + ';z-index:999999;border-radius:12px;opacity:' + (miniOpacity / 100) + ';cursor:pointer;user-select:none;font-weight:900;letter-spacing:0;';
 
   function applyMiniPos() {
     box.style.top = 'auto'; box.style.bottom = 'auto'; box.style.left = 'auto'; box.style.right = 'auto';
-    if (miniPos === 'bl') { box.style.bottom = '40px'; box.style.left = '24px'; }
-    if (miniPos === 'br') { box.style.bottom = '40px'; box.style.right = '24px'; }
-    if (miniPos === 'tl') { box.style.top = '16px'; box.style.left = '24px'; }
-    if (miniPos === 'tr') { box.style.top = '16px'; box.style.right = '24px'; }
+    if (miniPos === 'bl') { box.style.bottom = '34px'; box.style.left = '300px'; }
+    if (miniPos === 'br') { box.style.bottom = '34px'; box.style.right = '360px'; }
+    if (miniPos === 'tl') { box.style.top = '5px'; box.style.left = '300px'; }
+    if (miniPos === 'tr') { box.style.top = '5px'; box.style.right = '360px'; }
   }
-  applyMiniPos();
-  document.body.appendChild(box);
+  applyMiniPos(); document.body.appendChild(box);
 
   const panel = document.createElement('div');
   panel.setAttribute('data-reit-counter', 'panel');
-  panel.className = 'reit-panel';
+  panel.style = 'position:fixed;top:58px;bottom:24px;right:20px;background:rgba(248, 250, 252, 0.95);color:#1e293b;padding:16px;border-radius:16px;z-index:999999;font-family:' + technoFont + ';width:350px;overflow-y:auto;overflow-x:hidden;box-sizing:border-box;backdrop-filter:blur(12px);box-shadow:0 10px 30px -5px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);scrollbar-width:thin;transform:translateX(0);opacity:1;pointer-events:auto;transition:transform .35s cubic-bezier(0.4, 0, 0.2, 1),opacity .35s ease';
+
   panel.innerHTML = `
   <div id="mainView" style="width:100%; box-sizing:border-box;">
-    <div class="reit-header">
-      <div class="reit-logo" id="mainTitle">C-RET</div>
-      <button id="settingsBtn" class="reit-btn-icon" title="Ustawienia">⚙️</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(0,0,0,0.06); padding-bottom:10px;">
+      <div id="mainTitle" style="font-size:18px; font-weight:900; color:#0f172a; letter-spacing:0.5px; text-transform:uppercase;">C-RET</div>
+      <button id="settingsBtn" title="Ustawienia" style="width:30px; height:30px; border:none; border-radius:8px; background:rgba(0,0,0,0.05); color:#0f172a; font-size:16px; cursor:pointer; transition:background 0.2s;">⚙️</button>
     </div>
-    <div class="reit-stat-grid">
-      <div class="reit-stat-box">
-        <div class="reit-label">Trigger</div>
-        <div id="lt" class="reit-value">-</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; width:100%; box-sizing:border-box;">
+      <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:10px;">
+        <div style="font-size:10px; color:#64748b; text-transform:uppercase; margin-bottom:4px; font-weight:700;">Trigger</div>
+        <div id="lt" style="font-size:12px; font-weight:700; color:#1e293b; word-break:break-all; line-height:1.2;">-</div>
       </div>
-      <div class="reit-stat-box">
-        <div class="reit-label">Off Task</div>
-        <div id="off" class="reit-big-value" style="color:#4ade80;">30:00</div>
+      <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:10px;">
+        <div style="font-size:10px; color:#64748b; text-transform:uppercase; margin-bottom:4px; font-weight:700;">Off Task</div>
+        <div id="off" style="font-size:18px; font-weight:900; color:#16a34a;">30:00</div>
       </div>
     </div>
-    <div class="reit-stat-grid" style="margin-bottom:16px;">
-      <div class="reit-problem-card">
-        <div class="reit-label" style="color:rgba(252,165,165,0.8);">Problem</div>
-        <div id="pb" class="reit-big-value" style="color:#fca5a5;">0</div>
+    <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:10px; margin-bottom:12px; width:100%; box-sizing:border-box;">
+      <div style="font-size:10px; color:#64748b; text-transform:uppercase; margin-bottom:4px; font-weight:700;">Ostatni LPN</div>
+      <div id="lastLpnPanel" style="font-size:14px; font-weight:900; color:#1e293b; word-break:break-all;">-</div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; width:100%; box-sizing:border-box;">
+      <div style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; padding:12px 8px; border-radius:10px; text-align:center; text-transform:uppercase;">
+        <div style="font-size:10px; font-weight:900; opacity:0.9; margin-bottom:2px;">Problem</div>
+        <div id="pb" style="font-size:22px; font-weight:900;">0</div>
       </div>
-      <div class="reit-left-card">
-        <div class="reit-label" style="color:rgba(147,197,253,0.8);">Pozostało</div>
-        <div id="left" class="reit-big-value" style="color:#93c5fd;">0</div>
+      <div style="background:linear-gradient(135deg, #3b82f6, #2563eb); color:white; padding:12px 8px; border-radius:10px; text-align:center; text-transform:uppercase;">
+        <div style="font-size:10px; font-weight:900; opacity:0.9; margin-bottom:2px;">Pozostało</div>
+        <div id="left" style="font-size:22px; font-weight:900;">0</div>
       </div>
     </div>
     <div id="hours" style="margin-top:8px; padding-bottom:10px; width:100%; box-sizing:border-box;"></div>
   </div>
   <div id="settingsView" style="display:none; width:100%; box-sizing:border-box;">
-    <div class="reit-header">
-      <button id="backBtn" class="reit-btn-icon" title="Powrót" style="margin-right:10px;">‹</button>
-      <div class="reit-logo" style="font-size:18px;">USTAWIENIA</div>
-      <div style="width:36px;"></div>
+    <div style="display:flex; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(0,0,0,0.06); padding-bottom:10px;">
+      <button id="backBtn" title="Powrót" style="width:30px; height:30px; border:none; border-radius:8px; background:rgba(0,0,0,0.05); color:#0f172a; font-size:18px; cursor:pointer; margin-right:10px; display:flex; align-items:center; justify-content:center;">‹</button>
+      <div style="font-size:16px; font-weight:900; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Ustawienia</div>
     </div>
-    <div class="reit-card" style="margin-bottom:12px;">
-      <div style="display:grid; grid-template-columns:105px 1fr; gap:10px; align-items:center; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase;">
+    <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:12px; margin-bottom:10px; width:100%; box-sizing:border-box;">
+      <div style="display:grid; grid-template-columns:105px 1fr; gap:8px; align-items:center; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; width:100%; box-sizing:border-box;">
         <label>Wyklucz Przerwę</label>
-        <select id="breakSel" class="reit-settings-select">
+        <select id="breakSel" style="width:100%; height:28px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; background:#fff; font-family:${technoFont}; font-weight:700; box-sizing:border-box; margin:0;">
           <option value="0" ${selectedBreak === 0 ? 'selected' : ''}>Brak</option>
           <option value="1" ${selectedBreak === 1 ? 'selected' : ''}>Przerwa 1 (11:20/23:20)</option>
           <option value="2" ${selectedBreak === 2 ? 'selected' : ''}>Przerwa 2 (11:50/23:50)</option>
@@ -490,33 +166,34 @@
           <option value="4" ${selectedBreak === 4 ? 'selected' : ''}>Przerwa 4 (12:50/00:50)</option>
         </select>
         <label>Pozycja mini</label>
-        <select id="pos" class="reit-settings-select">
+        <select id="pos" style="width:100%; height:28px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; background:#fff; font-family:${technoFont}; font-weight:700; box-sizing:border-box; margin:0;">
           <option value="bl" ${miniPos === 'bl' ? 'selected' : ''}>Dół - Lewo</option>
           <option value="br" ${miniPos === 'br' ? 'selected' : ''}>Dół - Prawo</option>
           <option value="tl" ${miniPos === 'tl' ? 'selected' : ''}>Góra - Lewo</option>
           <option value="tr" ${miniPos === 'tr' ? 'selected' : ''}>Góra - Prawo</option>
         </select>
         <label>Kolor mini</label>
-        <input type="color" id="c" value="${manualColor}" class="reit-settings-input" style="height:34px; padding:2px;">
+        <input type="color" id="c" value="${manualColor}" style="width:100%; height:28px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; background:#fff; padding:0; box-sizing:border-box; margin:0;">
         <label>Rozmiar mini</label>
-        <input type="range" id="s" class="reit-range" min="10" max="45" value="${miniSize}">
+        <input type="range" id="s" min="10" max="45" value="${miniSize}" style="width:100%; accent-color:#3b82f6; box-sizing:border-box; margin:0;">
         <label>Widoczność</label>
-        <input type="range" id="o" class="reit-range" min="0" max="100" value="${miniOpacity}">
+        <input type="range" id="o" min="0" max="100" value="${miniOpacity}" style="width:100%; accent-color:#3b82f6; box-sizing:border-box; margin:0;">
         <label>Reit/h cel</label>
-        <input type="text" inputmode="numeric" id="target" value="${targetPerHour}" class="reit-settings-input">
+        <input type="text" inputmode="numeric" id="target" value="${targetPerHour}" style="width:100%; padding:6px 10px; border-radius:6px; border:1px solid #e2e8f0; background:#f8fafc; color:#1e293b; font-family:${technoFont}; font-weight:900; box-sizing:border-box; outline:none; margin:0;">
       </div>
     </div>
-    <div class="reit-card" style="margin-bottom:12px;">
-      <label class="reit-toggle-label">Ignoruj NLP <input id="ignoreNLP" type="checkbox" class="reit-toggle-checkbox" ${ignoreNLP ? 'checked' : ''}></label>
-      <label class="reit-toggle-label">Tempo % / h <input id="ratePercent" type="checkbox" class="reit-toggle-checkbox" ${showRatePercent ? 'checked' : ''}></label>
-      <label class="reit-toggle-label">Pozostało zamiast sumy <input id="leftMode" type="checkbox" class="reit-toggle-checkbox" ${showLeftInsteadTotal ? 'checked' : ''}></label>
-      <label class="reit-toggle-label">Auto-kolor tempa <input id="autoColor" type="checkbox" class="reit-toggle-checkbox" ${autoStatusColor ? 'checked' : ''}></label>
+    <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:12px; margin-bottom:10px; width:100%; box-sizing:border-box;">
+      <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Ignoruj NLP <input id="ignoreNLP" type="checkbox" style="width:18px; height:18px; accent-color:#ef4444; margin:0; cursor:pointer;" ${ignoreNLP ? 'checked' : ''}></label>
+      <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Tempo % / h <input id="ratePercent" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${showRatePercent ? 'checked' : ''}></label>
+      <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Pozostało zamiast sumy <input id="leftMode" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${showLeftInsteadTotal ? 'checked' : ''}></label>
+      <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Auto-kolor tempa <input id="autoColor" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${autoStatusColor ? 'checked' : ''}></label>
+      <label style="display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Pokaż LPN w mini <input id="showLpnMini" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${showLpnMini ? 'checked' : ''}></label>
     </div>
-    <div class="reit-card" style="margin-bottom:16px;">
-      <div class="reit-label" style="margin-bottom:10px;">Podgląd mini widgetu</div>
-      <div id="miniPreview" class="reit-preview">0 | 0.00/h</div>
+    <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:12px; margin-bottom:16px; width:100%; box-sizing:border-box;">
+      <div style="font-size:10px; font-weight:900; text-transform:uppercase; margin-bottom:8px; color:#64748b;">Podgląd mini widgetu</div>
+      <div id="miniPreview" style="font-size:20px; font-weight:900; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; text-align:center; color:#1e293b; width:100%; box-sizing:border-box;">0 | 0.00/h</div>
     </div>
-    <button id="resetOff" class="reit-btn reit-btn-reset">Reset Off Task</button>
+    <button id="resetOff" style="width:100%; padding:10px; border:none; border-radius:8px; background:#facc15; color:#1e293b; font-family:${technoFont}; font-size:13px; font-weight:900; cursor:pointer; text-transform:uppercase; transition:background 0.2s; margin-bottom:14px; box-sizing:border-box;">Reset Off Task</button>
   </div>`;
 
   document.body.appendChild(panel);
@@ -549,28 +226,25 @@
   function miniColor(rate) {
     if (!autoStatusColor) return manualColor;
     const pct = targetPerHour > 0 ? rate / targetPerHour : 0;
-    return pct >= 1 ? '#4ade80' : pct >= 0.85 ? '#fbbf24' : '#f87171';
+    return pct >= 1 ? '#16a34a' : pct >= 0.85 ? '#d97706' : '#dc2626';
   }
   function miniText() {
     const rate = currentRate(), left = Math.max(0, shiftTarget() - total);
     const main = showLeftInsteadTotal ? String(left) : String(total);
     const r = showRatePercent ? (targetPerHour > 0 ? ((rate / targetPerHour) * 100).toFixed(0) : '0') + '%/h' : rate.toFixed(2) + '/h';
-    return main + ' | ' + r;
+    let txt = main + ' | ' + r;
+    if (showLpnMini && lastLpn !== '-') txt += ' | ' + lastLpn;
+    return txt;
   }
   
   function updateHeader() {
     const hdr = panel.querySelector('#mainTitle');
-    if (hdr) hdr.innerHTML = 'C-RET' + (selectedBreak > 0 ? ' <span style="font-size:11px; color:#64748b; font-weight:700;">(Przerwa: ' + selectedBreak + ')</span>' : '');
+    if (hdr) hdr.innerHTML = 'C-RET' + (selectedBreak > 0 ? ' <span style="font-size:12px; color:#64748b; font-weight:700;">(Przerwa: ' + selectedBreak + ')</span>' : '');
   }
 
   function applyMini() {
-    const rate = currentRate();
-    boxText.textContent = miniText();
-    box.style.color = miniColor(rate);
-    dot.style.background = miniColor(rate);
-    dot.style.boxShadow = `0 0 12px ${miniColor(rate)}`;
-    const p = panel.querySelector('#miniPreview');
-    if (p) { p.textContent = miniText(); p.style.color = miniColor(rate); }
+    const rate = currentRate(); box.innerHTML = miniText(); box.style.color = miniColor(rate);
+    const p = panel.querySelector('#miniPreview'); if (p) { p.textContent = miniText(); p.style.color = miniColor(rate); }
   }
   
   function addPacks(n) { 
@@ -627,11 +301,117 @@
       const slotTarget = isLastSlot ? Math.round(targetPerHour / 2) : targetPerHour;
       const cumTarget = (i * targetPerHour) + slotTarget;
       const val = hourCounts[h] || 0, bars = Math.min(100, Math.round((val / max) * 100)), good = val >= slotTarget;
-      return `<div class="reit-hour-row ${good ? 'good' : ''}">
-        <b style="font-size:12px; text-align:left; color:#94a3b8;">${h}</b>
-        <input class="hc" data-h="${h}" type="text" inputmode="numeric" value="${val}" class="reit-input" style="width:100%;">
-        <div style="font-size:10px; color:#64748b; font-weight:900; text-align:left;">/${cumTarget}</div>
-        <div class="reit-progress-bar">
-          <div class="reit-progress-fill ${good ? 'green' : 'blue'}" style="width:${bars}%;"></div>
+      return `<div style="display:grid; grid-template-columns:40px 45px 30px 1fr; gap:6px; align-items:center; background:#ffffff; border:1px solid rgba(0,0,0,0.05); border-radius:8px; padding:6px 10px; margin-bottom:6px; border-left:4px solid ${good ? '#22c55e' : '#cbd5e1'}; width:100%; box-sizing:border-box;">
+        <b style="font-size:12px; text-align:left; color:#475569;">${h}</b>
+        <input class="hc" data-h="${h}" type="text" inputmode="numeric" value="${val}" style="width:100%; padding:4px 6px; border:1px solid #e2e8f0; border-radius:4px; background:#f8fafc; color:#1e293b; text-align:center; font-family:${technoFont}; font-weight:900; outline:none; font-size:12px; box-sizing:border-box;">
+        <div style="font-size:10px; color:#94a3b8; font-weight:900; text-align:left;">/${cumTarget}</div>
+        <div style="height:6px; background:#f1f5f9; border-radius:999px; overflow:hidden; width:100%;">
+          <div style="height:100%; width:${bars}%; background:${good ? '#22c55e' : '#3b82f6'}; border-radius:999px; transition:width 0.4s ease;"></div>
         </div>
-      </
+      </div>`;
+    }).join('');
+    const bbBars = Math.min(100, Math.round((beforeBreak / max) * 100));
+    rows += `<div style="display:grid; grid-template-columns:85px 45px 30px 1fr; gap:6px; align-items:center; background:#f8fafc; border:1px solid rgba(0,0,0,0.06); border-radius:8px; padding:6px 10px; margin-top:12px; margin-bottom:6px; border-left:4px solid #94a3b8; width:100%; box-sizing:border-box;">
+      <b style="font-size:11px; text-align:left; color:#475569;">Przed przerwą</b>
+      <input id="beforeBreak" type="text" inputmode="numeric" value="${beforeBreak}" style="width:100%; padding:4px 6px; border:1px solid #e2e8f0; border-radius:4px; background:#ffffff; color:#1e293b; text-align:center; font-family:${technoFont}; font-weight:900; outline:none; font-size:12px; box-sizing:border-box;">
+      <div style="font-size:10px; color:#94a3b8; font-weight:900; text-align:left;"></div>
+      <div style="height:6px; background:#e2e8f0; border-radius:999px; overflow:hidden; width:100%;">
+        <div style="height:100%; width:${Math.min(100, Math.round((beforeBreak / max) * 100))}%; background:#94a3b8; border-radius:999px; transition:width 0.4s ease;"></div>
+      </div>
+    </div>`;
+    panel.querySelector('#hours').innerHTML = rows; bindCountInputs();
+  }
+  
+  function render() {
+    recalcTotal(); const now = Date.now();
+    if (now - lastActivityTime > grace) { offRemain -= now - offLastTick; if (offRemain < 0) offRemain = 0; }
+    offLastTick = now;
+    
+    let isBreak = isBreakActive();
+    panel.querySelector('#lt').textContent = isBreak ? 'TRWA PRZERWA...' : lastTrigger;
+    panel.querySelector('#lt').style.color = isBreak ? '#d97706' : '#1e293b';
+    
+    const lpnPanel = panel.querySelector('#lastLpnPanel');
+    if (lpnPanel) lpnPanel.textContent = lastLpn;
+    
+    panel.querySelector('#off').textContent = fmt(offRemain);
+    panel.querySelector('#pb').textContent = problemTotal; panel.querySelector('#left').textContent = Math.max(0, shiftTarget() - total);
+    
+    updateHeader();
+    applyMini(); renderHours(false); 
+  }
+  
+  function scan() {
+    const txt = document.body.innerText || '';
+    
+    const lpnMatch = txt.match(/(LPN\s*[a-zA-Z0-9]+(?:\s+\d+){0,2})/i);
+    if (lpnMatch && lpnMatch[0]) {
+      const parsedLpn = lpnMatch[0].trim().toUpperCase();
+      if (parsedLpn !== lastLpn) {
+        lastLpn = parsedLpn;
+        saveState(true);
+        render();
+      }
+    }
+
+    let m = 0, p = 0;
+    triggerTexts.forEach(t => {
+      m += cnt(txt, t);
+      p += cnt(seen, t);
+    });
+
+    const pm = cnt(txt, problemText), pp = cnt(seen, problemText), nlpm = cnt(txt, nlpText), nlpp = cnt(seen, nlpText);
+    
+    if (!ignoreNLP && nlpm > nlpp) { 
+        skipNextPack = true; 
+        lastTrigger = 'NLP: POMIŃ NASTĘPNĄ ' + timeNow(); 
+        markActivity(); saveState(true); render(); 
+    }
+    
+    if (pm > pp) addProblem(pm - pp);
+    else if (m > p) { 
+      let diff = m - p; 
+      if (skipNextPack) { diff--; skipNextPack = false; lastTrigger = 'POMINIĘTO PO NLP ' + timeNow(); } 
+      if (diff > 0) { 
+        if (isBreakActive()) {
+          lastTrigger = 'PRZERWA - IGNORUJĘ ' + diff;
+          markActivity(); saveState(true); render();
+        } else {
+          addPacks(diff); 
+        }
+      } 
+    }
+    seen = txt;
+  }
+  
+  function toggleUI() { open = !open; panel.style.transform = open ? 'translateX(0)' : 'translateX(370px)'; panel.style.opacity = open ? '1' : '0'; panel.style.pointerEvents = open ? 'auto' : 'none'; }
+  function showSettings(v) { panel.querySelector('#mainView').style.display = v ? 'none' : 'block'; panel.querySelector('#settingsView').style.display = v ? 'block' : 'none'; applyMini(); }
+
+  setInterval(scan, 1000); setInterval(render, 1000); window.addEventListener('beforeunload', () => saveState(true)); box.onclick = toggleUI;
+
+  panel.querySelector('#settingsBtn').onclick = () => showSettings(true); panel.querySelector('#backBtn').onclick = () => showSettings(false);
+  panel.querySelector('#ignoreNLP').checked = ignoreNLP; panel.querySelector('#ratePercent').checked = showRatePercent; panel.querySelector('#leftMode').checked = showLeftInsteadTotal; panel.querySelector('#autoColor').checked = autoStatusColor;
+  panel.querySelector('#showLpnMini').checked = showLpnMini;
+  
+  panel.querySelector('#breakSel').onchange = (e) => { selectedBreak = parseInt(e.target.value) || 0; saveState(true); updateHeader(); render(); };
+  panel.querySelector('#pos').onchange = (e) => { miniPos = e.target.value; applyMiniPos(); saveState(true); };
+  panel.querySelector('#ignoreNLP').onchange = (e) => { ignoreNLP = e.target.checked; saveState(true); };
+  panel.querySelector('#ratePercent').onchange = (e) => { showRatePercent = e.target.checked; saveState(true); applyMini(); };
+  panel.querySelector('#leftMode').onchange = (e) => { showLeftInsteadTotal = e.target.checked; saveState(true); applyMini(); };
+  panel.querySelector('#autoColor').onchange = (e) => { autoStatusColor = e.target.checked; saveState(true); applyMini(); };
+  panel.querySelector('#showLpnMini').onchange = (e) => { showLpnMini = e.target.checked; saveState(true); applyMini(); };
+  panel.querySelector('#resetOff').onclick = () => { offRemain = 30 * 60 * 1000; lastActivityTime = Date.now(); offLastTick = Date.now(); saveState(true); render(); };
+  panel.querySelector('#c').oninput = (e) => { manualColor = e.target.value; saveState(true); applyMini(); };
+  panel.querySelector('#s').oninput = (e) => { miniSize = parseInt(e.target.value) || 12; box.style.fontSize = miniSize + 'px'; saveState(true); };
+  panel.querySelector('#o').oninput = (e) => { miniOpacity = parseInt(e.target.value) || 0; box.style.opacity = miniOpacity / 100; saveState(true); };
+  panel.querySelector('#target').oninput = (e) => { targetPerHour = parseInt(e.target.value) || 28; saveState(true); render(); };
+  
+  window.addEventListener('storage', (e) => {
+    if (e.key === saveKey) {
+      loadState();
+      render();
+    }
+  });
+
+  render(); scan(); renderHours(true); applyMini(); updateHeader();
+})();
