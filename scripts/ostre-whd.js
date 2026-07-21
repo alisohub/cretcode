@@ -1,6 +1,6 @@
 (() => {
-  if (window.scanCounterV29) return;
-  window.scanCounterV29 = true;
+  if (window.scanCounterV29Integrated) return;
+  window.scanCounterV29Integrated = true;
   document.querySelectorAll('[data-reit-counter]').forEach((el) => el.remove());
 
   const saveKey = 'scanCounterV29State';
@@ -15,9 +15,18 @@
   let total = 0, problemTotal = 0, seen = '', start = Date.now(), lastTrigger = '-';
   let targetPerHour = 28, beforeBreak = 0, open = true, grace = 4 * 60 * 1000, selectedBreak = 1;
   let offRemain = 30 * 60 * 1000, lastActivityTime = Date.now(), offLastTick = Date.now();
-  let triggerText = 'Wprowadź pojemnik', problemText = 'Zeskanuj - PROBLEM-SOLVE', nlpText = 'Zeskanuj nowy NLP';
+  
+  let triggerTexts = ['Wprowadź pojemnik', 'Вкажіть транспортну тару', 'Сканувати новий LPN'];
+  let problemText = 'Zeskanuj - PROBLEM-SOLVE', nlpText = 'Zeskanuj nowy NLP';
+  
   let skipNextPack = false, showRatePercent = false, showLeftInsteadTotal = false, autoStatusColor = false, ignoreNLP = false;
   let manualColor = '#808080', miniOpacity = 100, miniSize = 12, miniPos = 'tl', hourCounts = {}, problemCounts = {}, lastSave = 0;
+  
+  let lastLpn = '-';
+  let showLpnMini = false;
+
+  let autoDelay = 1, autoEnabled = true;
+  let autoRunning = false, autoSeconds = 0;
 
   function initCounts() { hours.forEach((h) => { if (hourCounts[h] == null) hourCounts[h] = 0; if (problemCounts[h] == null) problemCounts[h] = 0; }); }
 
@@ -39,6 +48,12 @@
       miniPos = s.miniPos || 'tl';
       miniOpacity = Math.min(100, Math.max(0, s.miniOpacity !== undefined ? parseInt(s.miniOpacity) : 100));
       miniSize = Math.min(45, Math.max(10, parseInt(s.miniSize) || 12));
+      lastLpn = s.lastLpn || '-';
+      showLpnMini = !!s.showLpnMini;
+      
+      autoDelay = s.autoDelay !== undefined ? Number(s.autoDelay) : 1;
+      autoEnabled = s.autoEnabled !== undefined ? !!s.autoEnabled : true;
+
       hourCounts = {}; problemCounts = {};
       hours.forEach((h) => {
         hourCounts[h] = Math.max(0, parseInt(s.hourCounts && s.hourCounts[h]) || 0);
@@ -52,7 +67,7 @@
     const now = Date.now();
     if (!force && now - lastSave < 1500) return;
     lastSave = now;
-    try { localStorage.setItem(saveKey, JSON.stringify({ shift: shiftName, savedAt: now, start, problemTotal, beforeBreak, targetPerHour, selectedBreak, offRemain, showRatePercent, showLeftInsteadTotal, autoStatusColor, ignoreNLP, manualColor, miniOpacity, miniSize, miniPos, hourCounts, problemCounts, lastTrigger })); } catch (_) {}
+    try { localStorage.setItem(saveKey, JSON.stringify({ shift: shiftName, savedAt: now, start, problemTotal, beforeBreak, targetPerHour, selectedBreak, offRemain, showRatePercent, showLeftInsteadTotal, autoStatusColor, ignoreNLP, manualColor, miniOpacity, miniSize, miniPos, hourCounts, problemCounts, lastTrigger, lastLpn, showLpnMini, autoDelay, autoEnabled })); } catch (_) {}
   }
 
   loadState(); initCounts();
@@ -126,6 +141,16 @@
         <div id="off" style="font-size:18px; font-weight:900; color:#16a34a;">30:00</div>
       </div>
     </div>
+    <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:10px; margin-bottom:12px; width:100%; box-sizing:border-box;">
+      <div style="font-size:10px; color:#64748b; text-transform:uppercase; margin-bottom:4px; font-weight:700;">Ostatni LPN</div>
+      <div id="lastLpnPanel" style="font-size:14px; font-weight:900; color:#1e293b; word-break:break-all;">-</div>
+    </div>
+    
+    <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:8px 10px; margin-bottom:12px; width:100%; box-sizing:border-box; text-align:center;">
+      <div style="font-size:10px; color:#64748b; text-transform:uppercase; font-weight:700;">Auto Kontynuuj</div>
+      <div id="acStatus" style="font-size:12px; font-weight:900; color:#3b82f6;">Oczekiwanie...</div>
+    </div>
+    
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; width:100%; box-sizing:border-box;">
       <div style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; padding:12px 8px; border-radius:10px; text-align:center; text-transform:uppercase;">
         <div style="font-size:10px; font-weight:900; opacity:0.9; margin-bottom:2px;">Problem</div>
@@ -138,11 +163,23 @@
     </div>
     <div id="hours" style="margin-top:8px; padding-bottom:10px; width:100%; box-sizing:border-box;"></div>
   </div>
+  
   <div id="settingsView" style="display:none; width:100%; box-sizing:border-box;">
     <div style="display:flex; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(0,0,0,0.06); padding-bottom:10px;">
       <button id="backBtn" title="Powrót" style="width:30px; height:30px; border:none; border-radius:8px; background:rgba(0,0,0,0.05); color:#0f172a; font-size:18px; cursor:pointer; margin-right:10px; display:flex; align-items:center; justify-content:center;">‹</button>
       <div style="font-size:16px; font-weight:900; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Ustawienia</div>
     </div>
+    
+    <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; padding:12px; margin-bottom:10px; width:100%; box-sizing:border-box;">
+      <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">
+        Auto Kontynuuj <input id="autoEnabled" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${autoEnabled ? 'checked' : ''}>
+      </label>
+      <div style="display:grid; grid-template-columns:105px 1fr; gap:8px; align-items:center; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; width:100%; box-sizing:border-box;">
+        <label>Opóźnienie (min)</label>
+        <input type="number" id="autoDelay" min="0" value="${autoDelay}" style="width:100%; padding:6px 10px; border-radius:6px; border:1px solid #e2e8f0; background:#fff; color:#1e293b; font-family:${technoFont}; font-weight:900; box-sizing:border-box; outline:none; margin:0;">
+      </div>
+    </div>
+    
     <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:12px; margin-bottom:10px; width:100%; box-sizing:border-box;">
       <div style="display:grid; grid-template-columns:105px 1fr; gap:8px; align-items:center; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; width:100%; box-sizing:border-box;">
         <label>Wyklucz Przerwę</label>
@@ -174,7 +211,8 @@
       <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Ignoruj NLP <input id="ignoreNLP" type="checkbox" style="width:18px; height:18px; accent-color:#ef4444; margin:0; cursor:pointer;" ${ignoreNLP ? 'checked' : ''}></label>
       <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Tempo % / h <input id="ratePercent" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${showRatePercent ? 'checked' : ''}></label>
       <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Pozostało zamiast sumy <input id="leftMode" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${showLeftInsteadTotal ? 'checked' : ''}></label>
-      <label style="display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Auto-kolor tempa <input id="autoColor" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${autoStatusColor ? 'checked' : ''}></label>
+      <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Auto-kolor tempa <input id="autoColor" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${autoStatusColor ? 'checked' : ''}></label>
+      <label style="display:flex; justify-content:space-between; align-items:center; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">Pokaż LPN w mini <input id="showLpnMini" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${showLpnMini ? 'checked' : ''}></label>
     </div>
     <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:12px; margin-bottom:16px; width:100%; box-sizing:border-box;">
       <div style="font-size:10px; font-weight:900; text-transform:uppercase; margin-bottom:8px; color:#64748b;">Podgląd mini widgetu</div>
@@ -188,6 +226,7 @@
   const settingsView = panel.querySelector('#settingsView');
   const tableBox = panel.querySelector('#hours');
   const settingsHost = document.createElement('div');
+  const acStatus = panel.querySelector('#acStatus');
   settingsHost.id = 'settingsOnMain';
   tableBox.replaceWith(settingsHost);
   while (settingsView.children.length > 1) settingsHost.appendChild(settingsView.children[1]);
@@ -219,9 +258,11 @@
     const rate = currentRate(), left = Math.max(0, shiftTarget() - total);
     const main = showLeftInsteadTotal ? String(left) : String(total);
     const r = showRatePercent ? (targetPerHour > 0 ? ((rate / targetPerHour) * 100).toFixed(0) : '0') + '%/h' : rate.toFixed(2) + '/h';
-    return main + ' | ' + r;
+    let txt = main + ' | ' + r;
+    if (showLpnMini && lastLpn !== '-') txt += ' | ' + lastLpn;
+    return txt;
   }
-  
+
   function updateHeader() {
     const hdr = panel.querySelector('#mainTitle');
     if (hdr) hdr.innerHTML = 'C-RET' + (selectedBreak > 0 ? ' <span style="font-size:12px; color:#64748b; font-weight:700;">(Przerwa: ' + selectedBreak + ')</span>' : '');
@@ -231,7 +272,7 @@
     const rate = currentRate(); box.innerHTML = miniText(); box.style.color = miniColor(rate);
     const p = panel.querySelector('#miniPreview'); if (p) { p.textContent = miniText(); p.style.color = miniColor(rate); }
   }
-  
+
   function addPacks(n) { 
     n = parseInt(n) || 0; if (n <= 0) return; 
     loadState();
@@ -254,7 +295,7 @@
     problemTotal += n; problemCounts[getSlot()] += n; 
     lastTrigger = 'PROBLEM ' + timeNow(); markActivity(); saveState(true); render(); 
   }
-  
+
   function bindCountInputs() {
     panel.querySelectorAll('.hc').forEach((inp) => {
       inp.oninput = (e) => { hourCounts[e.target.getAttribute('data-h')] = Math.max(0, parseInt(e.target.value) || 0); recalcTotal(); updateTop(); };
@@ -306,50 +347,77 @@
     </div>`;
     panel.querySelector('#hours').innerHTML = rows; bindCountInputs();
   }
-  
+
   function render() {
     recalcTotal(); const now = Date.now();
     if (now - lastActivityTime > grace) { offRemain -= now - offLastTick; if (offRemain < 0) offRemain = 0; }
     offLastTick = now;
-    
+
     let isBreak = isBreakActive();
     panel.querySelector('#lt').textContent = isBreak ? 'TRWA PRZERWA...' : lastTrigger;
     panel.querySelector('#lt').style.color = isBreak ? '#d97706' : '#1e293b';
-    
+
+    const lpnPanel = panel.querySelector('#lastLpnPanel');
+    if (lpnPanel) lpnPanel.textContent = lastLpn;
+
     panel.querySelector('#off').textContent = fmt(offRemain);
     panel.querySelector('#pb').textContent = problemTotal; panel.querySelector('#left').textContent = Math.max(0, shiftTarget() - total);
-    
+
     updateHeader();
     applyMini(); renderHours(false); 
   }
-  
-  function scan() {
-    const txt = document.body.innerText || '', 
-          m = cnt(txt, triggerText), 
-          p = cnt(seen, triggerText), 
-          pm = cnt(txt, problemText), 
-          pp = cnt(seen, problemText), 
-          nlpm = cnt(txt, nlpText), 
-          nlpp = cnt(seen, nlpText);
-    
-    const autoClickBtn = Array.from(document.querySelectorAll('button, a, div[role="button"]')).find(
-      el => el.textContent && el.textContent.includes('Rozpocznij nowy zwrot')
-    );
 
-    if (autoClickBtn && !autoClickBtn.disabled && autoClickBtn.offsetParent !== null) {
-        autoClickBtn.click();
-        lastTrigger = 'AUTO: NOWY ZWROT ' + timeNow();
-        markActivity();
-        saveState(true); 
-        render();
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.keyCode === 13) {
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && active.value) {
+        const val = active.value;
+        const lpnMatch = val.match(/(?:sp)?LPN[\s\-_]*[a-zA-Z0-9]+(?:\s+\d+){0,2}/i);
+        if (lpnMatch && lpnMatch[0]) {
+          const parsedLpn = lpnMatch[0].trim().toUpperCase();
+          if (parsedLpn !== lastLpn) {
+            lastLpn = parsedLpn;
+            saveState(true);
+            render();
+          }
+        }
+      }
     }
+  });
+  
+  document.addEventListener("keydown", e => {
+      if (e.ctrlKey && e.shiftKey && e.code === "KeyH") {
+          toggleUI();
+      }
+  });
+
+  function scan() {
+    const txt = document.body.innerText || '';
+
+    const lpnMatch = txt.match(/(?:sp)?LPN[\s\-_]*[a-zA-Z0-9]+(?:\s+\d+){0,2}/i);
+    if (lpnMatch && lpnMatch[0]) {
+      const parsedLpn = lpnMatch[0].trim().toUpperCase();
+      if (parsedLpn !== lastLpn) {
+        lastLpn = parsedLpn;
+        saveState(true);
+        render();
+      }
+    }
+
+    let m = 0, p = 0;
+    triggerTexts.forEach(t => {
+      m += cnt(txt, t);
+      p += cnt(seen, t);
+    });
+
+    const pm = cnt(txt, problemText), pp = cnt(seen, problemText), nlpm = cnt(txt, nlpText), nlpp = cnt(seen, nlpText);
 
     if (!ignoreNLP && nlpm > nlpp) { 
         skipNextPack = true; 
         lastTrigger = 'NLP: POMIŃ NASTĘPNĄ ' + timeNow(); 
         markActivity(); saveState(true); render(); 
     }
-    
+
     if (pm > pp) addProblem(pm - pp);
     else if (m > p) { 
       let diff = m - p; 
@@ -365,26 +433,39 @@
     }
     seen = txt;
   }
-  
+
   function toggleUI() { open = !open; panel.style.transform = open ? 'translateX(0)' : 'translateX(370px)'; panel.style.opacity = open ? '1' : '0'; panel.style.pointerEvents = open ? 'auto' : 'none'; }
   function showSettings(v) { panel.querySelector('#mainView').style.display = v ? 'none' : 'block'; panel.querySelector('#settingsView').style.display = v ? 'block' : 'none'; applyMini(); }
 
-  setInterval(scan, 1000); setInterval(render, 1000); window.addEventListener('beforeunload', () => saveState(true)); box.onclick = toggleUI;
+  setInterval(scan, 1000); 
+  setInterval(render, 1000); 
+  window.addEventListener('beforeunload', () => saveState(true)); 
+  box.onclick = toggleUI;
 
-  panel.querySelector('#settingsBtn').onclick = () => showSettings(true); panel.querySelector('#backBtn').onclick = () => showSettings(false);
-  panel.querySelector('#ignoreNLP').checked = ignoreNLP; panel.querySelector('#ratePercent').checked = showRatePercent; panel.querySelector('#leftMode').checked = showLeftInsteadTotal; panel.querySelector('#autoColor').checked = autoStatusColor;
+  panel.querySelector('#settingsBtn').onclick = () => showSettings(true); 
+  panel.querySelector('#backBtn').onclick = () => showSettings(false);
+  panel.querySelector('#ignoreNLP').checked = ignoreNLP; 
+  panel.querySelector('#ratePercent').checked = showRatePercent; 
+  panel.querySelector('#leftMode').checked = showLeftInsteadTotal; 
+  panel.querySelector('#autoColor').checked = autoStatusColor;
+  panel.querySelector('#showLpnMini').checked = showLpnMini;
+
+  panel.querySelector('#autoEnabled').onchange = (e) => { autoEnabled = e.target.checked; saveState(true); };
+  panel.querySelector('#autoDelay').oninput = (e) => { autoDelay = Number(e.target.value) || 0; saveState(true); };
+
   panel.querySelector('#breakSel').onchange = (e) => { selectedBreak = parseInt(e.target.value) || 0; saveState(true); updateHeader(); render(); };
   panel.querySelector('#pos').onchange = (e) => { miniPos = e.target.value; applyMiniPos(); saveState(true); };
   panel.querySelector('#ignoreNLP').onchange = (e) => { ignoreNLP = e.target.checked; saveState(true); };
   panel.querySelector('#ratePercent').onchange = (e) => { showRatePercent = e.target.checked; saveState(true); applyMini(); };
   panel.querySelector('#leftMode').onchange = (e) => { showLeftInsteadTotal = e.target.checked; saveState(true); applyMini(); };
   panel.querySelector('#autoColor').onchange = (e) => { autoStatusColor = e.target.checked; saveState(true); applyMini(); };
+  panel.querySelector('#showLpnMini').onchange = (e) => { showLpnMini = e.target.checked; saveState(true); applyMini(); };
   panel.querySelector('#resetOff').onclick = () => { offRemain = 30 * 60 * 1000; lastActivityTime = Date.now(); offLastTick = Date.now(); saveState(true); render(); };
   panel.querySelector('#c').oninput = (e) => { manualColor = e.target.value; saveState(true); applyMini(); };
   panel.querySelector('#s').oninput = (e) => { miniSize = parseInt(e.target.value) || 12; box.style.fontSize = miniSize + 'px'; saveState(true); };
   panel.querySelector('#o').oninput = (e) => { miniOpacity = parseInt(e.target.value) || 0; box.style.opacity = miniOpacity / 100; saveState(true); };
   panel.querySelector('#target').oninput = (e) => { targetPerHour = parseInt(e.target.value) || 28; saveState(true); render(); };
-  
+
   window.addEventListener('storage', (e) => {
     if (e.key === saveKey) {
       loadState();
@@ -393,4 +474,58 @@
   });
 
   render(); scan(); renderHours(true); applyMini(); updateHeader();
+
+  function findTextNode(text) {
+      return [...document.querySelectorAll("*")]
+          .find(el => el.innerText && el.innerText.includes(text));
+  }
+
+  setInterval(() => {
+      if (!autoEnabled) {
+          if (acStatus) acStatus.innerHTML = "Wymaga włączenia (ustawienia)";
+          autoRunning = false;
+          return;
+      }
+
+      if (autoRunning) return;
+
+      const textElement = findTextNode("Kontynuuj [Enter]");
+
+      if (!textElement) {
+          if (acStatus) acStatus.innerHTML = "Oczekiwanie na tekst...";
+          return;
+      }
+
+      autoRunning = true;
+      autoSeconds = autoDelay * 60;
+
+      let timer = setInterval(() => {
+          if (!autoEnabled) {
+              clearInterval(timer);
+              autoRunning = false;
+              if (acStatus) acStatus.innerHTML = "Przerwano";
+              return;
+          }
+
+          if (acStatus) acStatus.innerHTML = `Kliknięcie za <b style="color:#ef4444">${autoSeconds} s</b>`;
+
+          if (autoSeconds <= 0) {
+              clearInterval(timer);
+              let button = textElement.closest("div")?.querySelector("button,input[type=button],input[type=submit]") ||
+                           document.querySelector("button,input[type=button],input[type=submit]");
+
+              if (button) {
+                  button.click();
+                  if (acStatus) acStatus.innerHTML = "✅ Kliknięto";
+              } else {
+                  if (acStatus) acStatus.innerHTML = "❌ Nie znaleziono przycisku";
+              }
+              
+              setTimeout(() => { autoRunning = false; }, 2000); 
+          }
+          autoSeconds--;
+      }, 1000);
+
+  }, 1000);
+
 })();
