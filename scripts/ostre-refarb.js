@@ -389,7 +389,7 @@
     }
   });
   
-  // COMBINED HOTKEY
+  
   document.addEventListener("keydown", e => {
       if (e.ctrlKey && e.shiftKey && e.code === "KeyH") {
           toggleUI();
@@ -442,22 +442,20 @@
   function toggleUI() { open = !open; panel.style.transform = open ? 'translateX(0)' : 'translateX(370px)'; panel.style.opacity = open ? '1' : '0'; panel.style.pointerEvents = open ? 'auto' : 'none'; }
   function showSettings(v) { panel.querySelector('#mainView').style.display = v ? 'none' : 'block'; panel.querySelector('#settingsView').style.display = v ? 'block' : 'none'; applyMini(); }
 
-  // INITIALIZE INTERVALS
+  
   setInterval(scan, 1000); 
   setInterval(render, 1000); 
   window.addEventListener('beforeunload', () => saveState(true)); 
   box.onclick = toggleUI;
 
-  // EVENT LISTENERS FOR SETTINGS
+
   panel.querySelector('#settingsBtn').onclick = () => showSettings(true); 
   panel.querySelector('#backBtn').onclick = () => showSettings(false);
   panel.querySelector('#ignoreNLP').checked = ignoreNLP; 
   panel.querySelector('#ratePercent').checked = showRatePercent; 
   panel.querySelector('#leftMode').checked = showLeftInsteadTotal; 
   panel.querySelector('#autoColor').checked = autoStatusColor;
-  panel.querySelector('#showLpnMini').checked = showLpnMini;
-
-  // AUTO CONTINUE LISTENERS
+  panel.querySelector('#showLpnMini').checked = 
   panel.querySelector('#autoEnabled').onchange = (e) => { autoEnabled = e.target.checked; saveState(true); };
   panel.querySelector('#autoDelay').oninput = (e) => { autoDelay = Number(e.target.value) || 0; saveState(true); };
 
@@ -530,7 +528,7 @@
                   if (acStatus) acStatus.innerHTML = "❌ Nie znaleziono przycisku";
               }
               
-              // Знімаємо блок через кілька секунд
+              
               setTimeout(() => { autoRunning = false; }, 2000); 
           }
           autoSeconds--;
