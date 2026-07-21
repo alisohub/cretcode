@@ -1,6 +1,6 @@
 (() => {
-  if (window.scanCounterV29) return;
-  window.scanCounterV29 = true;
+  if (window.scanCounterV29Integrated) return;
+  window.scanCounterV29Integrated = true;
   document.querySelectorAll('[data-reit-counter]').forEach((el) => el.remove());
 
   const saveKey = 'scanCounterV29State';
@@ -25,6 +25,10 @@
   let lastLpn = '-';
   let showLpnMini = false;
 
+  // AUTO CONTINUE VARIABLES
+  let autoDelay = 1, autoEnabled = true;
+  let autoRunning = false, autoSeconds = 0;
+
   function initCounts() { hours.forEach((h) => { if (hourCounts[h] == null) hourCounts[h] = 0; if (problemCounts[h] == null) problemCounts[h] = 0; }); }
 
   function loadState() {
@@ -47,6 +51,11 @@
       miniSize = Math.min(45, Math.max(10, parseInt(s.miniSize) || 12));
       lastLpn = s.lastLpn || '-';
       showLpnMini = !!s.showLpnMini;
+      
+      // Auto Continue state
+      autoDelay = s.autoDelay !== undefined ? Number(s.autoDelay) : 1;
+      autoEnabled = s.autoEnabled !== undefined ? !!s.autoEnabled : true;
+
       hourCounts = {}; problemCounts = {};
       hours.forEach((h) => {
         hourCounts[h] = Math.max(0, parseInt(s.hourCounts && s.hourCounts[h]) || 0);
@@ -60,7 +69,7 @@
     const now = Date.now();
     if (!force && now - lastSave < 1500) return;
     lastSave = now;
-    try { localStorage.setItem(saveKey, JSON.stringify({ shift: shiftName, savedAt: now, start, problemTotal, beforeBreak, targetPerHour, selectedBreak, offRemain, showRatePercent, showLeftInsteadTotal, autoStatusColor, ignoreNLP, manualColor, miniOpacity, miniSize, miniPos, hourCounts, problemCounts, lastTrigger, lastLpn, showLpnMini })); } catch (_) {}
+    try { localStorage.setItem(saveKey, JSON.stringify({ shift: shiftName, savedAt: now, start, problemTotal, beforeBreak, targetPerHour, selectedBreak, offRemain, showRatePercent, showLeftInsteadTotal, autoStatusColor, ignoreNLP, manualColor, miniOpacity, miniSize, miniPos, hourCounts, problemCounts, lastTrigger, lastLpn, showLpnMini, autoDelay, autoEnabled })); } catch (_) {}
   }
 
   loadState(); initCounts();
@@ -138,6 +147,13 @@
       <div style="font-size:10px; color:#64748b; text-transform:uppercase; margin-bottom:4px; font-weight:700;">Ostatni LPN</div>
       <div id="lastLpnPanel" style="font-size:14px; font-weight:900; color:#1e293b; word-break:break-all;">-</div>
     </div>
+    
+    <!-- AUTO CONTINUE STATUS -->
+    <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:8px 10px; margin-bottom:12px; width:100%; box-sizing:border-box; text-align:center;">
+      <div style="font-size:10px; color:#64748b; text-transform:uppercase; font-weight:700;">Auto Kontynuuj</div>
+      <div id="acStatus" style="font-size:12px; font-weight:900; color:#3b82f6;">Oczekiwanie...</div>
+    </div>
+    
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; width:100%; box-sizing:border-box;">
       <div style="background:linear-gradient(135deg, #ef4444, #dc2626); color:white; padding:12px 8px; border-radius:10px; text-align:center; text-transform:uppercase;">
         <div style="font-size:10px; font-weight:900; opacity:0.9; margin-bottom:2px;">Problem</div>
@@ -150,11 +166,24 @@
     </div>
     <div id="hours" style="margin-top:8px; padding-bottom:10px; width:100%; box-sizing:border-box;"></div>
   </div>
+  
   <div id="settingsView" style="display:none; width:100%; box-sizing:border-box;">
     <div style="display:flex; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(0,0,0,0.06); padding-bottom:10px;">
       <button id="backBtn" title="Powrót" style="width:30px; height:30px; border:none; border-radius:8px; background:rgba(0,0,0,0.05); color:#0f172a; font-size:18px; cursor:pointer; margin-right:10px; display:flex; align-items:center; justify-content:center;">‹</button>
       <div style="font-size:16px; font-weight:900; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Ustawienia</div>
     </div>
+    
+    <!-- AUTO CONTINUE SETTINGS -->
+    <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; padding:12px; margin-bottom:10px; width:100%; box-sizing:border-box;">
+      <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:11px; font-weight:900; text-transform:uppercase; color:#1e293b; cursor:pointer;">
+        Auto Kontynuuj <input id="autoEnabled" type="checkbox" style="width:18px; height:18px; accent-color:#3b82f6; margin:0; cursor:pointer;" ${autoEnabled ? 'checked' : ''}>
+      </label>
+      <div style="display:grid; grid-template-columns:105px 1fr; gap:8px; align-items:center; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; width:100%; box-sizing:border-box;">
+        <label>Opóźnienie (min)</label>
+        <input type="number" id="autoDelay" min="0" value="${autoDelay}" style="width:100%; padding:6px 10px; border-radius:6px; border:1px solid #e2e8f0; background:#fff; color:#1e293b; font-family:${technoFont}; font-weight:900; box-sizing:border-box; outline:none; margin:0;">
+      </div>
+    </div>
+    
     <div style="background:#ffffff; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:12px; margin-bottom:10px; width:100%; box-sizing:border-box;">
       <div style="display:grid; grid-template-columns:105px 1fr; gap:8px; align-items:center; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; width:100%; box-sizing:border-box;">
         <label>Wyklucz Przerwę</label>
@@ -201,6 +230,7 @@
   const settingsView = panel.querySelector('#settingsView');
   const tableBox = panel.querySelector('#hours');
   const settingsHost = document.createElement('div');
+  const acStatus = panel.querySelector('#acStatus');
   settingsHost.id = 'settingsOnMain';
   tableBox.replaceWith(settingsHost);
   while (settingsView.children.length > 1) settingsHost.appendChild(settingsView.children[1]);
@@ -358,6 +388,13 @@
       }
     }
   });
+  
+  // COMBINED HOTKEY
+  document.addEventListener("keydown", e => {
+      if (e.ctrlKey && e.shiftKey && e.code === "KeyH") {
+          toggleUI();
+      }
+  });
 
   function scan() {
     const txt = document.body.innerText || '';
@@ -405,11 +442,24 @@
   function toggleUI() { open = !open; panel.style.transform = open ? 'translateX(0)' : 'translateX(370px)'; panel.style.opacity = open ? '1' : '0'; panel.style.pointerEvents = open ? 'auto' : 'none'; }
   function showSettings(v) { panel.querySelector('#mainView').style.display = v ? 'none' : 'block'; panel.querySelector('#settingsView').style.display = v ? 'block' : 'none'; applyMini(); }
 
-  setInterval(scan, 1000); setInterval(render, 1000); window.addEventListener('beforeunload', () => saveState(true)); box.onclick = toggleUI;
+  // INITIALIZE INTERVALS
+  setInterval(scan, 1000); 
+  setInterval(render, 1000); 
+  window.addEventListener('beforeunload', () => saveState(true)); 
+  box.onclick = toggleUI;
 
-  panel.querySelector('#settingsBtn').onclick = () => showSettings(true); panel.querySelector('#backBtn').onclick = () => showSettings(false);
-  panel.querySelector('#ignoreNLP').checked = ignoreNLP; panel.querySelector('#ratePercent').checked = showRatePercent; panel.querySelector('#leftMode').checked = showLeftInsteadTotal; panel.querySelector('#autoColor').checked = autoStatusColor;
+  // EVENT LISTENERS FOR SETTINGS
+  panel.querySelector('#settingsBtn').onclick = () => showSettings(true); 
+  panel.querySelector('#backBtn').onclick = () => showSettings(false);
+  panel.querySelector('#ignoreNLP').checked = ignoreNLP; 
+  panel.querySelector('#ratePercent').checked = showRatePercent; 
+  panel.querySelector('#leftMode').checked = showLeftInsteadTotal; 
+  panel.querySelector('#autoColor').checked = autoStatusColor;
   panel.querySelector('#showLpnMini').checked = showLpnMini;
+
+  // AUTO CONTINUE LISTENERS
+  panel.querySelector('#autoEnabled').onchange = (e) => { autoEnabled = e.target.checked; saveState(true); };
+  panel.querySelector('#autoDelay').oninput = (e) => { autoDelay = Number(e.target.value) || 0; saveState(true); };
 
   panel.querySelector('#breakSel').onchange = (e) => { selectedBreak = parseInt(e.target.value) || 0; saveState(true); updateHeader(); render(); };
   panel.querySelector('#pos').onchange = (e) => { miniPos = e.target.value; applyMiniPos(); saveState(true); };
@@ -432,4 +482,60 @@
   });
 
   render(); scan(); renderHours(true); applyMini(); updateHeader();
+
+  // ----- AUTO CONTINUE LOGIC -----
+  function findTextNode(text) {
+      return [...document.querySelectorAll("*")]
+          .find(el => el.innerText && el.innerText.includes(text));
+  }
+
+  setInterval(() => {
+      if (!autoEnabled) {
+          if (acStatus) acStatus.innerHTML = "Wymaga włączenia (ustawienia)";
+          autoRunning = false;
+          return;
+      }
+
+      if (autoRunning) return;
+
+      const textElement = findTextNode("Kontynuuj [Enter]");
+
+      if (!textElement) {
+          if (acStatus) acStatus.innerHTML = "Oczekiwanie na tekst...";
+          return;
+      }
+
+      autoRunning = true;
+      autoSeconds = autoDelay * 60;
+
+      let timer = setInterval(() => {
+          if (!autoEnabled) {
+              clearInterval(timer);
+              autoRunning = false;
+              if (acStatus) acStatus.innerHTML = "Przerwano";
+              return;
+          }
+
+          if (acStatus) acStatus.innerHTML = `Kliknięcie za <b style="color:#ef4444">${autoSeconds} s</b>`;
+
+          if (autoSeconds <= 0) {
+              clearInterval(timer);
+              let button = textElement.closest("div")?.querySelector("button,input[type=button],input[type=submit]") ||
+                           document.querySelector("button,input[type=button],input[type=submit]");
+
+              if (button) {
+                  button.click();
+                  if (acStatus) acStatus.innerHTML = "✅ Kliknięto";
+              } else {
+                  if (acStatus) acStatus.innerHTML = "❌ Nie znaleziono przycisku";
+              }
+              
+              // Знімаємо блок через кілька секунд
+              setTimeout(() => { autoRunning = false; }, 2000); 
+          }
+          autoSeconds--;
+      }, 1000);
+
+  }, 1000);
+
 })();
