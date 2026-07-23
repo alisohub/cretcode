@@ -3,59 +3,58 @@
   window.autoPrzypiszLpnV1 = true;
 
   let cooldownUntil = 0;
-  let hadInputLastCheck = false;
 
-  // Phrases to look for in the button text
+  // Phrases to match against button text
   const TARGET_TEXTS = ['перепризначте lpn', 'przypisz ponownie lpn'];
 
+  // Helper to find visible, enabled target button
   function findLpnButton() {
-    return Array.from(document.querySelectorAll('button, a, div[role="button"]')).find(el => {
-      if (!el.textContent) return false;
-      const text = el.textContent.toLowerCase();
-      return TARGET_TEXTS.some(target => text.includes(target));
-    });
+    const buttons = document.querySelectorAll('button, a, div[role="button"]');
+    for (const el of buttons) {
+      if (el.disabled || el.offsetParent === null || !el.textContent) continue;
+      const text = el.textContent.toLowerCase().replace(/\s+/g, ' ');
+      if (TARGET_TEXTS.some(target => text.includes(target))) {
+        return el;
+      }
+    }
+    return null;
   }
 
   function checkInputAndTrigger() {
     const now = Date.now();
 
-    // 1. Check if we are currently in the 15-second sleep period
+    // 1. Check if we are currently in cooldown
     if (now < cooldownUntil) return;
 
-    // 2. Button check: Only proceed if a matching button is visible and enabled
+    // 2. Ensure button is present on screen
     const btn = findLpnButton();
-    const isBtnVisible = btn && !btn.disabled && btn.offsetParent !== null;
-
-        // Optional modification: Sleep 10s if button is missing
-    if (!isBtnVisible) {
-      cooldownUntil = Date.now() + 10000;
+    if (!btn) {
+      cooldownUntil = now + 3000; // Pause for 3s if button is missing
       return;
     }
 
+    // 3. Find visible, active text inputs
+    const inputs = document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([disabled])');
 
-    // 3. Find visible input fields on the page
-    const inputs = Array.from(
-      document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])')
-    ).filter(input => input.offsetParent !== null && !input.disabled);
-
-    // 4. Inspect input values
     for (const input of inputs) {
+      if (input.offsetParent === null) continue; // Skip hidden inputs
+
       const value = input.value.trim();
 
-      // Skip empty fields
+      // Skip empty input fields
       if (value === "") continue;
 
-      // If text DOES NOT start with 't' or 'T', trigger click and enter 10s cooldown
+      cooldownUntil = now + 15000;
+      // 4. Trigger only if value does NOT start with 't' or 'T'
       if (!value.toLowerCase().startsWith('t')) {
         btn.click();
-        cooldownUntil = Date.now() + 10000; // Sleep for 15 seconds
         break;
       }
     }
   }
 
-  // Poll every 50ms
-  setInterval(checkInputAndTrigger, 100);
+  // Poll every 200ms for fast reaction time without CPU strain
+  setInterval(checkInputAndTrigger, 200);
 
-  alert('✅ Skrypt Auto-Przypisz LPN (Multilingual + 10s Cooldown) uruchomiony!');
+  alert('✅ Skrypt Auto-Przypisz LPN uruchomiony!');
 })();
