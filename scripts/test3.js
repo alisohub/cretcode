@@ -29,7 +29,7 @@
     // 2. Ensure button is present on screen
     const btn = findLpnButton();
     if (!btn) {
-      cooldownUntil = now + 3000; // Pause for 3s if button is missing
+      cooldownUntil = now + 1500; // Pause for 1.5s if button is missing
       return;
     }
 
@@ -53,8 +53,8 @@
     }
   }
 
-  // Poll every 100ms for fast reaction time without CPU strain
-  setInterval(checkInputAndTrigger, 100);
+  // Poll every 80ms for fast reaction time without CPU strain
+  setInterval(checkInputAndTrigger, 80);
 
   alert('✅ Skrypt Auto-Przypisz LPN uruchomiony!');
 })();
