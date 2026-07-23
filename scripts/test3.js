@@ -19,7 +19,7 @@
     }
   }
 
-  setInterval(autoClickLpn, 1000);
+  setInterval(autoClickLpn, 15000);
   
   alert('✅ Skrypt Auto-Przypisz LPN (15s pauzy) uruchomiony!');
 })();
