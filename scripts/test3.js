@@ -26,7 +26,12 @@
     const btn = findLpnButton();
     const isBtnVisible = btn && !btn.disabled && btn.offsetParent !== null;
 
-    if (!isBtnVisible) return;
+        // Optional modification: Sleep 15s if button is missing
+    if (!isBtnVisible) {
+      cooldownUntil = Date.now() + 15000;
+      return;
+    }
+
 
     // 3. Find visible input fields on the page
     const inputs = Array.from(
