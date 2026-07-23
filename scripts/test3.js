@@ -7,10 +7,10 @@
   function autoClickLpn() {
     const now = Date.now();
     
-    if (now - lastClickTime < 15000) return; 
+    if (now - lastClickTime < 2000) return; 
 
     const btn = Array.from(document.querySelectorAll('button, a, div[role="button"]')).find(
-      el => el.textContent && el.textContent.toLowerCase().includes('przypisz ponownie lpn')
+      el => el.textContent && el.textContent.toLowerCase().includes('перепризначте lpn')
     );
 
     if (btn && !btn.disabled && btn.offsetParent !== null) {
