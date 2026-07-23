@@ -15,7 +15,7 @@
 
     if (btn && !btn.disabled && btn.offsetParent !== null) {
         btn.click();
-        lastClickTime = Date.now();
+        lastClickTime = Date.now() + 15000;
     }
   }
 
