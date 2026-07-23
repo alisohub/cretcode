@@ -46,7 +46,7 @@
 
       cooldownUntil = now + 1000;
       // 4. Trigger only if value does NOT start with 't' or 'T'
-      if (!(value.startsWith('t') || value.startsWith(1) || value.startsWith(0))) {
+      if (!(value.startsWith('t') && value.startsWith(1) && value.startsWith(0))) {
         alert(value);
         btn.click();
         break;
