@@ -29,7 +29,7 @@
     // 2. Ensure button is present on screen
     const btn = findLpnButton();
     if (!btn) {
-      cooldownUntil = now + 1500; // Pause for 1.5s if button is missing
+      cooldownUntil = now + 1000; // Pause for 1.5s if button is missing
       return;
     }
 
@@ -44,9 +44,9 @@
       // Skip empty input fields
       if (value === "") continue;
 
-      cooldownUntil = now + 15000;
+      cooldownUntil = now + 1000;
       // 4. Trigger only if value does NOT start with 't' or 'T'
-      if (!value.startsWith('1')) {
+      if (!(value.startsWith('t') || value.startsWith(1))) {
         alert(value);
         btn.click();
         break;
