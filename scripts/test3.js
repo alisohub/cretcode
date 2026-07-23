@@ -5,10 +5,15 @@
   let cooldownUntil = 0;
   let hadInputLastCheck = false;
 
+  // Phrases to look for in the button text
+  const TARGET_TEXTS = ['перепризначте lpn', 'przypisz ponownie lpn'];
+
   function findLpnButton() {
-    return Array.from(document.querySelectorAll('button, a, div[role="button"]')).find(
-      el => el.textContent && el.textContent.toLowerCase().includes('перепризначте lpn')
-    );
+    return Array.from(document.querySelectorAll('button, a, div[role="button"]')).find(el => {
+      if (!el.textContent) return false;
+      const text = el.textContent.toLowerCase();
+      return TARGET_TEXTS.some(target => text.includes(target));
+    });
   }
 
   function checkInputAndTrigger() {
@@ -17,7 +22,7 @@
     // 1. Check if we are currently in the 15-second sleep period
     if (now < cooldownUntil) return;
 
-    // 2. Button check: Only proceed if the button is visible and enabled
+    // 2. Button check: Only proceed if a matching button is visible and enabled
     const btn = findLpnButton();
     const isBtnVisible = btn && !btn.disabled && btn.offsetParent !== null;
 
@@ -58,5 +63,5 @@
   // Poll every 50ms
   setInterval(checkInputAndTrigger, 50);
 
-  alert('✅ Skrypt Auto-Przypisz LPN (Smart 15s Cooldown) uruchomiony!');
+  alert('✅ Skrypt Auto-Przypisz LPN (Multilingual + 15s Cooldown) uruchomiony!');
 })();
