@@ -26,9 +26,9 @@
     const btn = findLpnButton();
     const isBtnVisible = btn && !btn.disabled && btn.offsetParent !== null;
 
-        // Optional modification: Sleep 15s if button is missing
+        // Optional modification: Sleep 10s if button is missing
     if (!isBtnVisible) {
-      cooldownUntil = Date.now() + 15000;
+      cooldownUntil = Date.now() + 10000;
       return;
     }
 
@@ -38,17 +38,6 @@
       document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])')
     ).filter(input => input.offsetParent !== null && !input.disabled);
 
-    // If an input was present before but has now disappeared, trigger 15s sleep
-    if (inputs.length === 0) {
-      if (hadInputLastCheck) {
-        cooldownUntil = Date.now() + 15000;
-        hadInputLastCheck = false;
-      }
-      return;
-    }
-
-    hadInputLastCheck = true;
-
     // 4. Inspect input values
     for (const input of inputs) {
       const value = input.value.trim();
@@ -56,17 +45,17 @@
       // Skip empty fields
       if (value === "") continue;
 
-      // If text DOES NOT start with 't' or 'T', trigger click and enter 15s cooldown
+      // If text DOES NOT start with 't' or 'T', trigger click and enter 10s cooldown
       if (!value.toLowerCase().startsWith('t')) {
         btn.click();
-        cooldownUntil = Date.now() + 15000; // Sleep for 15 seconds
+        cooldownUntil = Date.now() + 10000; // Sleep for 15 seconds
         break;
       }
     }
   }
 
   // Poll every 50ms
-  setInterval(checkInputAndTrigger, 50);
+  setInterval(checkInputAndTrigger, 100);
 
-  alert('✅ Skrypt Auto-Przypisz LPN (Multilingual + 15s Cooldown) uruchomiony!');
+  alert('✅ Skrypt Auto-Przypisz LPN (Multilingual + 10s Cooldown) uruchomiony!');
 })();
