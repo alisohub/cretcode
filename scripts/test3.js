@@ -1,6 +1,6 @@
 (() => {
-  if (window.autoPrzypiszLpnV1) return;
-  window.autoPrzypiszLpnV1 = true;
+  if (window.autoPrzypiszLpnV1sanyaloh) return;
+  window.autoPrzypiszLpnV1sanyaloh = true;
 
   let cooldownUntil = 0;
 
