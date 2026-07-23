@@ -53,8 +53,8 @@
     }
   }
 
-  // Poll every 200ms for fast reaction time without CPU strain
-  setInterval(checkInputAndTrigger, 200);
+  // Poll every 100ms for fast reaction time without CPU strain
+  setInterval(checkInputAndTrigger, 100);
 
   alert('✅ Skrypt Auto-Przypisz LPN uruchomiony!');
 })();
