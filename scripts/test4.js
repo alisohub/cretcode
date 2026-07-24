@@ -3,11 +3,8 @@
   window.autoPrzypiszLpnV1sanyaloh = true;
 
   let cooldownUntil = 0;
-
-  // Phrases to match against button text
   const TARGET_TEXTS = ['перепризначте lpn', 'przypisz ponownie lpn'];
 
-  // Helper to find visible, enabled target button
   function findLpnButton() {
     const buttons = document.querySelectorAll('button, a, div[role="button"]');
     for (const el of buttons) {
@@ -22,40 +19,43 @@
 
   function checkInputAndTrigger() {
     const now = Date.now();
-
-    // 1. Check if we are currently in cooldown
     if (now < cooldownUntil) return;
 
-    // 2. Ensure button is present on screen
     const btn = findLpnButton();
     if (!btn) {
-      cooldownUntil = now + 1000; // Pause for 1.5s if button is missing
+      cooldownUntil = now + 1000;
       return;
     }
 
-    // 3. Find visible, active text inputs
     const inputs = document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([disabled])');
 
     for (const input of inputs) {
-      if (input.offsetParent === null) continue; // Skip hidden inputs
+      if (input.offsetParent === null) continue;
 
-      const value = input.value.trim();
+      // 1. Get raw value, remove non-printable/invisible characters, lowercase, trim
+      let cleanValue = input.value
+        .replace(/[^\x20-\x7E]/g, '') // Strip hidden/control characters
+        .trim()
+        .toLowerCase();
 
-      // Skip empty input fields
-      if (value === "") continue;
+      if (cleanValue === "") continue;
 
-      cooldownUntil = now + 1000;
-      // 4. Trigger only if value does NOT start with 't' or 'T'
-      if (!(value.startsWith('t') && value.startsWith(1) && value.startsWith(0))) {
-        alert(value);
-        btn.click();
-        break;
+      // 2. Check the first character directly
+      const firstChar = cleanValue.charAt(0);
+
+      // If first character is 't', '1', or '0', SKIP
+      if (firstChar === 't' || firstChar === '1' || firstChar === '0') {
+        continue;
       }
+
+      // 3. Otherwise, trigger
+      cooldownUntil = now + 1000;
+      alert(`Triggered by value: "${input.value}" (Cleaned: "${cleanValue}")`);
+      btn.click();
+      break;
     }
   }
 
-  // Poll every 80ms for fast reaction time without CPU strain
   setInterval(checkInputAndTrigger, 80);
-
-  alert('✅ Skrypt Auto-Przypisz LPN uruchomiony!');
+  alert('✅ Skrypt Auto-Przypisz LPN (Sanitized) uruchomiony!');
 })();
