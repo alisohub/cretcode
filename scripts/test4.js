@@ -44,7 +44,7 @@
       const firstChar = cleanValue.charAt(0);
 
       // If first character is 't', '1', or '0', SKIP
-      if (firstChar === 't' || firstChar === '1' || firstChar === '0') {
+      if (firstChar === 't' || firstChar === '1' || firstChar === '0' || firstChar === '2' ) {
         continue;
       }
 
